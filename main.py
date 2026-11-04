@@ -65,7 +65,7 @@ HANDLER_FEATURES = {
     "sensoji_explain": "sensoji", "runes_divination": "runes", "gengtu_question": "gengtu",
     "gengtu_answer": "gengtu", "random_image": "safebooru", "tag": "tagger", "qrcode": "qrcode",
     "weather_cmd": "weather", "translate_cmd": "translation", "ip_query": "ipquery", "whois_query": "ipquery",
-    "aicu_uid": "aicu", "like_me": "zanwo", "subscribe_like": "zanwo", "unsubscribe_like": "zanwo",
+    "aicu_uid": "aicu", "like_me": "zanwo", "subscribe_like": "zanwo",
     "rewind_cmd": "rewind", "cancel_rewind": "rewind",
 }
 TAG_COMMANDS = {"tag"}
@@ -86,6 +86,7 @@ class OmniPlugin(Star):
         self.qr_waiter = ImageWaiter()
         self.rewinder = rewind.Rewinder()
         self._math = None
+        self._plot_lock = asyncio.Lock()  # pyplot 不是线程安全的，一次只画一张
         self._background: set[asyncio.Task] = set()
 
     async def initialize(self):
@@ -822,6 +823,17 @@ class OmniPlugin(Star):
         self._cleanup_plots()
         return self._math_core()
 
+    async def _plot(self, event: AstrMessageEvent, func, *args) -> str:
+        """在后台线程绘图，避免计算和出图期间整个机器人卡住；图片回到主线程再发送。"""
+        core = self._math_ready()
+        if core is None:
+            return "数学绘图功能已关闭"
+        async with self._plot_lock:
+            text, chains = await asyncio.to_thread(plot_tools.run_in_thread, func, core, *args)
+        for chain in chains:
+            await event.send(chain)
+        return text
+
     @filter.llm_tool(name="plot_2d")
     async def plot_2d(
         self, event: AstrMessageEvent, type: str, expression: str, x_range: str = "", y_range: str = "",
@@ -839,10 +851,9 @@ class OmniPlugin(Star):
             xlabel(string): x 轴标签，可留空
             ylabel(string): y 轴标签，可留空
         """
-        core = self._math_ready()
-        if core is None:
-            return "数学绘图功能已关闭"
-        return await plot_tools.plot_2d(core, event, type, expression, x_range, y_range, t_range, title, xlabel, ylabel)
+        return await self._plot(
+            event, plot_tools.plot_2d, type, expression, x_range, y_range, t_range, title, xlabel, ylabel
+        )
 
     @filter.llm_tool(name="plot_3d")
     async def plot_3d(
@@ -865,11 +876,8 @@ class OmniPlugin(Star):
             ylabel(string): y 轴标签，可留空
             zlabel(string): z 轴标签，可留空
         """
-        core = self._math_ready()
-        if core is None:
-            return "数学绘图功能已关闭"
-        return await plot_tools.plot_3d(
-            core, event, type, expression, x_range, y_range, z_range, t_range, phi_range,
+        return await self._plot(
+            event, plot_tools.plot_3d, type, expression, x_range, y_range, z_range, t_range, phi_range,
             title, xlabel, ylabel, zlabel,
         )
 
@@ -889,10 +897,9 @@ class OmniPlugin(Star):
             ylabel(string): y 轴标签，可留空
             zlabel(string): z 轴标签，3d 使用，可留空
         """
-        core = self._math_ready()
-        if core is None:
-            return "数学绘图功能已关闭"
-        return await plot_tools.plot_vectors(core, event, type, vectors, scalar, title, xlabel, ylabel, zlabel)
+        return await self._plot(
+            event, plot_tools.plot_vectors, type, vectors, scalar, title, xlabel, ylabel, zlabel
+        )
 
     # ------------------------------------------------------------ 点赞（仅 aiocqhttp）
 
@@ -949,31 +956,17 @@ class OmniPlugin(Star):
     @filter.platform_adapter_type(filter.PlatformAdapterType.AIOCQHTTP)
     @filter.command("订阅点赞")
     async def subscribe_like(self, event: AstrMessageEvent):
-        """订阅每日自动点赞"""
+        """订阅每日自动点赞；已订阅时再发一次即取消"""
         if not self._on("zanwo"):
             return
         cfg = self._zanwo_cfg()
         sender = str(event.get_sender_id())
         users = [str(u) for u in cfg.get("subscribed_users") or []]
         if sender in users:
-            yield event.plain_result("你已经订阅点赞了哦~")
+            cfg["subscribed_users"] = [u for u in users if u != sender]
+            self.config.save_config()
+            yield event.plain_result("已取消订阅，我将不再自动给你点赞。想恢复就再发一次 /订阅点赞")
             return
         cfg["subscribed_users"] = users + [sender]
         self.config.save_config()
-        yield event.plain_result("订阅成功！我将每天自动为你点赞")
-
-    @filter.platform_adapter_type(filter.PlatformAdapterType.AIOCQHTTP)
-    @filter.command("取消订阅点赞")
-    async def unsubscribe_like(self, event: AstrMessageEvent):
-        """取消每日自动点赞"""
-        if not self._on("zanwo"):
-            return
-        cfg = self._zanwo_cfg()
-        sender = str(event.get_sender_id())
-        users = [str(u) for u in cfg.get("subscribed_users") or []]
-        if sender not in users:
-            yield event.plain_result("你还没有订阅点赞哦~")
-            return
-        cfg["subscribed_users"] = [u for u in users if u != sender]
-        self.config.save_config()
-        yield event.plain_result("已取消订阅！我将不再自动给你点赞")
+        yield event.plain_result("订阅成功！我将每天自动为你点赞。再发一次 /订阅点赞 可以取消")

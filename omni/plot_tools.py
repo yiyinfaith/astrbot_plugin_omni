@@ -2,11 +2,29 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 
 PLOT_2D_TYPES = ("function", "implicit", "polar", "parametric", "vector_field")
 PLOT_3D_TYPES = ("surface", "implicit", "spherical", "parametric")
 VECTOR_TYPES = ("2d", "3d", "addition", "scaling", "basis")
+
+
+class SendCapture:
+    """在后台线程里绘图时代替 event：先记下要发的消息，回到主线程再真正发送。"""
+
+    def __init__(self) -> None:
+        self.chains: list = []
+
+    async def send(self, chain) -> None:
+        self.chains.append(chain)
+
+
+def run_in_thread(func, core, *args) -> tuple[str, list]:
+    """在当前（后台）线程里跑一个绘图入口，返回 (工具返回文字, 待发送的消息)。"""
+    capture = SendCapture()
+    text = asyncio.run(func(core, capture, *args))
+    return text, capture.chains
 
 
 def split_exprs(text: str) -> list[str]:

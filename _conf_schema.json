@@ -42,7 +42,7 @@
       "enable": {
         "description": "启用",
         "type": "bool",
-        "default": true,
+        "default": false,
         "hint": "`/看看腿` 发送随机图片"
       },
       "api": {
@@ -463,7 +463,7 @@
         "description": "启用",
         "type": "bool",
         "default": true,
-        "hint": "`赞我`、`/订阅点赞`、`/取消订阅点赞`，仅 QQ（aiocqhttp）"
+        "hint": "`赞我`、`赞@某人`、`/订阅点赞`（再发一次取消），仅 QQ（aiocqhttp）"
       },
       "white_list_groups": {
         "description": "群聊白名单",

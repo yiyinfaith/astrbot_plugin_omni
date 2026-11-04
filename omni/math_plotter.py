@@ -475,7 +475,7 @@ class MathPlotterCore:
             ax.set_title(title, fontsize=14)
 
             filepath = self._save_and_close(fig)
-            expr_tex = ", ".join([f"$y={latex(self._parse_expr(self._preprocess_expr(e.strip())))}" for e in expr_list])
+            expr_tex = ", ".join([f"$y={latex(self._parse_expr(self._preprocess_expr(e.strip())))}$" for e in expr_list])
             description = f"📈 已绘制函数对比图像：{expr_tex}，x 范围 [{x_min}, {x_max}]。"
             await self._send_result(event, description, filepath)
             return description

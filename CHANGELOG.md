@@ -8,6 +8,7 @@
 - 新增对话回退（整合 [llm_amnesia](https://github.com/SinkAbyss/astrbot_plugin_llm_amnesia)）：`/回退 [轮数]`（`/rewind x`）、`/取消回退`（`/rewind cancel`），去掉了状态和帮助指令。
 - 删除帮助类和管理员指令：抽签帮助、梗图帮助、天气帮助、订阅点赞列表、谁赞了bot。
 - 函数工具从 24 个减到 6 个：四则运算合并为 `calculate`（精确计算任意算式）；天气合并为 `get_weather`；数学绘图删除全部指令，16 个工具合并为 `plot_2d`、`plot_3d`、`plot_vectors`，隐式方程可直接写 `a=b`。
+- 修复：关闭的功能连同指令一起禁用（不再被 LLM 转去执行）；免费版天气不再显示假的“湿度 0%、风速 0”；百度翻译报错显示中文原因；多函数对比图的公式文字缺少 `$`。
 - 新增 Logo。
 
 ## v1.0.0

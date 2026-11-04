@@ -57,6 +57,14 @@ FEATURE_TOOLS = {
     "sensoji": ("explain_fortune",),
     "weather": ("get_weather",),
 }
+# 处理函数 -> 所属功能。功能关闭时把这些指令设为禁用，不再被匹配，也不会出现在指令列表里
+HANDLER_FEATURES = {
+    "left_brain": "left_brain", "jrrp": "jrrp", "sensoji_draw": "sensoji", "sensoji_change": "sensoji",
+    "sensoji_explain": "sensoji", "runes_divination": "runes", "gengtu_question": "gengtu",
+    "gengtu_answer": "gengtu", "random_image": "safebooru", "tag": "tagger", "qrcode": "qrcode",
+    "weather_cmd": "weather", "translate_cmd": "translation", "ip_query": "ipquery", "whois_query": "ipquery",
+    "aicu_uid": "aicu", "like_me": "zanwo", "subscribe_like": "zanwo", "unsubscribe_like": "zanwo",
+}
 TAG_COMMANDS = {"tag"}
 QR_COMMANDS = {"二维码", "扫码"}
 
@@ -75,6 +83,18 @@ class OmniPlugin(Star):
         self.qr_waiter = ImageWaiter()
         self._math = None
         self._background: set[asyncio.Task] = set()
+
+    async def initialize(self):
+        self._apply_feature_switches()
+
+    def _apply_feature_switches(self) -> None:
+        """只改内存里的指令启用状态，不写数据库；修改配置后插件重载时重新生效。"""
+        from astrbot.core.star.star_handler import star_handlers_registry
+
+        for handler in star_handlers_registry.get_handlers_by_module_name(type(self).__module__):
+            feature = HANDLER_FEATURES.get(handler.handler_name)
+            if feature and not self._on(feature):
+                handler.enabled = False
 
     async def terminate(self):
         await self.browser.close()

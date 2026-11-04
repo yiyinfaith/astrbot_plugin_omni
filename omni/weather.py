@@ -47,8 +47,9 @@ async def current(api_key: str, city: str) -> dict | None:
         "desc": now.get("text", "未知"),
         "temp": temp,
         "feels_like": now.get("feels_like", temp),
-        "humidity": now.get("humidity", "0"),
-        "wind_speed": now.get("wind_speed", "0"),
+        # 免费版实况不返回湿度和风速，缺失时留空、不显示
+        "humidity": now.get("humidity", ""),
+        "wind_speed": now.get("wind_speed", ""),
     }
 
 
@@ -81,14 +82,17 @@ async def suggestions(api_key: str, city: str) -> list[dict] | None:
 
 
 def current_text(data: dict) -> str:
-    return (
-        f"当前天气：\n"
-        f"城市: {data['city']}\n"
-        f"天气: {data['desc']}\n"
-        f"温度: {data['temp']}℃ (体感: {data['feels_like']}℃)\n"
-        f"湿度: {data['humidity']}%\n"
-        f"风速: {data['wind_speed']} km/h"
-    )
+    lines = [
+        "当前天气：",
+        f"城市: {data['city']}",
+        f"天气: {data['desc']}",
+        f"温度: {data['temp']}℃ (体感: {data['feels_like']}℃)",
+    ]
+    if data.get("humidity"):
+        lines.append(f"湿度: {data['humidity']}%")
+    if data.get("wind_speed"):
+        lines.append(f"风速: {data['wind_speed']} km/h")
+    return "\n".join(lines)
 
 
 def forecast_text(city: str, days: list[dict], tips: list[dict] | None) -> str:
@@ -178,12 +182,16 @@ CURRENT_WEATHER_TEMPLATE = """
     <div class="weather-info">
       <strong>温度:</strong> {{ temp }}℃ (体感: {{ feels_like }}℃)
     </div>
+    {% if humidity %}
     <div class="weather-info">
       <strong>湿度:</strong> {{ humidity }}%
     </div>
+    {% endif %}
+    {% if wind_speed %}
     <div class="weather-info">
       <strong>风速:</strong> {{ wind_speed }} km/h
     </div>
+    {% endif %}
     
     <div class="source-info">
       数据来源: 心知天气（Seniverse） 免费API

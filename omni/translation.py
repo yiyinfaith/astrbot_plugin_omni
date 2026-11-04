@@ -44,4 +44,23 @@ async def translate(appid: str, secret: str, target_name: str, text: str) -> str
         return f"翻译失败: HTTP {status}"
     if "trans_result" in result:
         return "翻译结果: " + "\n".join(item.get("dst", "") for item in result["trans_result"])
-    return f"翻译失败: {result.get('error_msg', '未知错误')}"
+    code = str(result.get("error_code", ""))
+    hint = ERROR_HINTS.get(code)
+    return f"翻译失败: {hint}（{code}）" if hint else f"翻译失败: {result.get('error_msg', '未知错误')}"
+
+
+# 百度翻译常见错误码，见 https://fanyi-api.baidu.com/doc/21
+ERROR_HINTS = {
+    "52001": "请求超时，请重试",
+    "52002": "百度翻译系统错误，请重试",
+    "52003": "APP ID 不正确或服务未开通",
+    "54000": "缺少必填参数",
+    "54001": "签名错误，请检查密钥是否填对",
+    "54003": "访问频率受限，请稍后再试",
+    "54004": "账户余额不足",
+    "54005": "长文本请求过于频繁，请稍后再试",
+    "58000": "服务器 IP 不在白名单：请在百度翻译开放平台「开发者信息」里添加本机 IP 或清空白名单",
+    "58001": "不支持该目标语种",
+    "58002": "服务已关闭，请到控制台开启",
+    "90107": "认证未通过或未生效",
+}

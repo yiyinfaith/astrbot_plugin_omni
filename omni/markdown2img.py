@@ -6,7 +6,7 @@ import re
 
 from astrbot.api import logger
 
-from .browser import SharedBrowser
+from .browser import SharedBrowser, block_private_requests
 
 MD_PATTERN = re.compile(r"(<md>.*?</md>)", re.DOTALL)
 
@@ -102,10 +102,13 @@ async def render(browser: SharedBrowser, md_text: str, output_path: str, scale: 
     import mistune
 
     width_style = f"width: {width}px; box-sizing: border-box;" if width else ""
-    html = HTML_TEMPLATE.format(content=mistune.html(md_text), width_style=width_style)
+    # 内容来自 LLM，可能被用户诱导写进 <script> 等原始 HTML，一律转义
+    markdown = mistune.create_markdown(escape=True, plugins=["strikethrough", "footnotes", "table"])
+    html = HTML_TEMPLATE.format(content=markdown(md_text), width_style=width_style)
     instance = await browser.get()
     context = await instance.new_context(device_scale_factor=scale)
     try:
+        await block_private_requests(context)
         page = await context.new_page()
         try:
             await page.set_content(html, wait_until="networkidle", timeout=20000)

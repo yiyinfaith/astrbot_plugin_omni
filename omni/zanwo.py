@@ -3,8 +3,14 @@
 from __future__ import annotations
 
 import random
+import re
 
 from astrbot.api import logger
+
+# aiocqhttp 会把 @ 写进 message_str，形如 “ @昵称(123456) ”
+AT_TEXT = re.compile(r"@[^\n]*?\(\d+\)")
+# 去掉 @ 后只剩这些字时才算“赞某人”
+LIKE_OTHERS = re.compile(r"赞(他|她|它|ta|TA|Ta)?")
 
 SUCCESS_RESPONSES = [
     "👍{total_likes}",

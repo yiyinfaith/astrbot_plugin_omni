@@ -11,13 +11,16 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
-from sympy import SympifyError, latex, lambdify, symbols, sympify  # noqa: E402
+from sympy import SympifyError, latex, lambdify, symbols  # noqa: E402
 from sympy.abc import x as sym_x  # noqa: E402
 
 import astrbot.api.message_components as Comp  # noqa: E402
 from astrbot.api import logger  # noqa: E402
 from astrbot.api.event import AstrMessageEvent, MessageEventResult  # noqa: E402
 from astrbot.core.message.message_event_result import MessageChain  # noqa: E402
+
+# sympify 会 eval 字符串，表达式来自 LLM，统一先过安全检查
+from .safe_expr import safe_sympify as sympify  # noqa: E402
 
 CJK_CANDIDATES = [
     "Noto Sans CJK SC", "Noto Sans SC", "Noto Sans CJK TC",

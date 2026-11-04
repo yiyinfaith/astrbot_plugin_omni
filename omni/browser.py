@@ -3,9 +3,40 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import sys
+from urllib.parse import urlsplit
 
 from astrbot.api import logger
+
+
+def is_public_url(url: str) -> bool:
+    """只允许访问公网 http(s) 资源和内嵌数据，挡住 localhost、内网地址和本地文件。"""
+    parts = urlsplit(url)
+    if parts.scheme in ("data", "blob", "about"):
+        return True
+    if parts.scheme not in ("http", "https"):
+        return False
+    host = (parts.hostname or "").strip("[]").lower()
+    if not host or host == "localhost" or host.endswith((".localhost", ".local", ".internal")):
+        return False
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return True
+    return ip.is_global
+
+
+async def block_private_requests(target) -> None:
+    """给 Playwright 的 page 或 context 加上请求过滤，渲染的内容来自用户或 LLM，不能让它访问内网。"""
+
+    async def handle(route):
+        if is_public_url(route.request.url):
+            await route.continue_()
+        else:
+            await route.abort()
+
+    await target.route("**/*", handle)
 
 
 class SharedBrowser:

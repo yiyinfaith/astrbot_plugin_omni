@@ -10,7 +10,7 @@ from pathlib import Path
 
 from astrbot.api import logger
 
-from .browser import SharedBrowser
+from .browser import SharedBrowser, block_private_requests
 
 BILI_API_URL = "https://worker.aicu.cc/api/bili/space"
 MARK_API_URL = "https://api.aicu.cc/api/v3/user/getusermark"
@@ -137,7 +137,9 @@ async def analyze(browser: SharedBrowser, uid: str, cookie: str, output_dir: Pat
     device_name, history_names = parse_device(mark_raw, bool(cookie))
     replies = parse_replies(reply_raw)
     stats = replies["stats"]
-    html = jinja2.Template(TEMPLATE_PATH.read_text(encoding="utf-8")).render(
+    # 昵称、签名、评论都是 B 站用户写的，必须转义后再放进页面
+    template = jinja2.Environment(autoescape=True).from_string(TEMPLATE_PATH.read_text(encoding="utf-8"))
+    html = template.render(
         uid=uid, profile=profile, device_name=device_name, history_names=history_names[:10],
         total_count=replies["count"], avg_length=stats["avg_length"], active_hour=stats["active_hour"],
         hour_dist=stats["hour_dist"], max_hour_count=stats["max_hour_count"], replies=replies["list"],
@@ -148,6 +150,7 @@ async def analyze(browser: SharedBrowser, uid: str, cookie: str, output_dir: Pat
     instance = await browser.get()
     page = await instance.new_page(viewport={"width": 600, "height": 800}, device_scale_factor=2)
     try:
+        await block_private_requests(page)
         await page.set_content(html, wait_until="networkidle")
         try:
             await page.locator(".container").screenshot(path=str(path))

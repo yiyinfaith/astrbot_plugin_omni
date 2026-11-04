@@ -158,21 +158,27 @@ class ImageWaiter:
     """记录“请发送图片”的等待状态，按会话 + 用户区分，互不干扰。"""
 
     def __init__(self):
-        self._pending: dict[str, float] = {}
+        self._pending: dict[str, tuple[float, float]] = {}
 
     def start(self, event: Any, seconds: float) -> None:
-        self._pending[sender_key(event)] = time.monotonic() + max(5.0, float(seconds or 60))
+        seconds = max(5.0, float(seconds or 60))
+        self._pending[sender_key(event)] = (time.monotonic() + seconds, seconds)
 
     def cancel(self, event: Any) -> None:
         self._pending.pop(sender_key(event), None)
 
     def state(self, event: Any) -> str:
-        """返回 none / waiting / expired；过期的状态会被清除。"""
+        """返回 none / waiting / expired；过期的状态会被清除。
+
+        超时后再等一个同样长的时间段内发图才提示“超时了”，更晚发的图当作普通消息，不再打扰。
+        """
         key = sender_key(event)
-        deadline = self._pending.get(key)
-        if deadline is None:
+        entry = self._pending.get(key)
+        if entry is None:
             return "none"
-        if time.monotonic() > deadline:
-            self._pending.pop(key, None)
-            return "expired"
-        return "waiting"
+        deadline, seconds = entry
+        now = time.monotonic()
+        if now <= deadline:
+            return "waiting"
+        self._pending.pop(key, None)
+        return "expired" if now <= deadline + seconds else "none"

@@ -690,12 +690,19 @@ class OmniPlugin(Star):
         if now is None and not days:
             yield event.plain_result(f"查询 [{city}] 的天气失败，请检查城市名或稍后再试。")
             return
+        chain = []
         if self._cfg("weather").get("send_mode", "text") == "image":
-            chain = []
-            if now:
-                chain.append(Comp.Image.fromURL(await weather.render_current(self._render_html, now)))
-            if days:
-                chain.append(Comp.Image.fromURL(await weather.render_forecast(self._render_html, city, days, tips)))
+            try:
+                if now:
+                    chain.append(Comp.Image.fromURL(await weather.render_current(self._render_html, now)))
+                if days:
+                    chain.append(
+                        Comp.Image.fromURL(await weather.render_forecast(self._render_html, city, days, tips))
+                    )
+            except Exception as exc:  # 文转图服务不可用时改发文字
+                logger.warning(f"[天气] 渲染图片失败，改用文字: {exc}")
+                chain = []
+        if chain:
             yield event.chain_result(chain)
         else:
             parts = []
@@ -922,14 +929,17 @@ class OmniPlugin(Star):
         allowed = {str(g) for g in cfg.get("white_list_groups") or []}
         if group_id and allowed and group_id not in allowed:
             return
-        if (event.message_str or "").strip() == "赞我":
+        text = (event.message_str or "").strip()
+        if text == "赞我":
             targets = [str(event.get_sender_id())]
-        else:
+        elif zanwo.LIKE_OTHERS.fullmatch(zanwo.AT_TEXT.sub("", text).strip()):
             self_id = str(event.get_self_id())
             targets = [
                 str(seg.qq) for seg in event.get_messages()
                 if isinstance(seg, Comp.At) and str(seg.qq) not in (self_id, "all")
             ]
+        else:
+            targets = []  # “赞同@某人的看法”之类的话不点赞
         if not targets:
             return
         client = event.bot

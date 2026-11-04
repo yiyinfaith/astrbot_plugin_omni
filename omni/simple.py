@@ -47,6 +47,21 @@ _CMPOPS = {
 }
 
 
+MAX_DIGITS = 10000
+
+
+def _pow_digits(base, exponent) -> float:
+    """估算乘方结果的位数，防止 (9**1000)**1000 这类算式算到卡死。"""
+    try:
+        base = abs(Fraction(base))
+        if base in (0, 1):
+            return 0.0
+        size = abs(math.log10(base.numerator) - math.log10(base.denominator))
+        return size * abs(float(exponent))
+    except (TypeError, ValueError, OverflowError):
+        return 0.0
+
+
 def _eval(node):
     if isinstance(node, ast.Expression):
         return _eval(node.body)
@@ -61,6 +76,8 @@ def _eval(node):
         left, right = _eval(node.left), _eval(node.right)
         if isinstance(node.op, ast.Pow) and abs(right) > 1000:
             raise ValueError("指数太大")
+        if isinstance(node.op, ast.Pow) and _pow_digits(left, right) > MAX_DIGITS:
+            raise ValueError("结果太大")
         if isinstance(node.op, ast.Pow) and isinstance(right, Fraction) and right.denominator != 1:
             left, right = float(left), float(right)
         return _BINOPS[type(node.op)](left, right)
@@ -89,9 +106,16 @@ def _fmt(value) -> str:
     if isinstance(value, bool):
         return "成立" if value else "不成立"
     if isinstance(value, Fraction):
-        if value.denominator == 1 and len(str(value.numerator)) <= 30:
-            return str(value.numerator)
-        value = float(value)
+        if value.denominator == 1:
+            digits = str(abs(value.numerator))
+            if len(digits) <= 30:
+                return str(value.numerator)
+            sign = "-" if value < 0 else ""
+            return f"{sign}{digits[0]}.{digits[1:10].rstrip('0') or '0'}e+{len(digits) - 1}"
+        try:
+            value = float(value)
+        except OverflowError:
+            raise ValueError("结果太大") from None
     if isinstance(value, float):
         if value != value or value in (float("inf"), float("-inf")):
             raise ValueError("结果不是有限数")

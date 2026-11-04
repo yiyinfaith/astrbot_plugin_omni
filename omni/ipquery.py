@@ -67,7 +67,7 @@ async def fetch_ip_info(ip: str) -> str:
         return "❌ 请输入需要查询的 IP 地址、IPv6 地址或域名。"
     for api in IP_APIS:
         try:
-            response = await _get(api["url"].format(ip))
+            response = await _get(api["url"].format(parse.quote(ip, safe=".:")))
             if response.status_code in {403, 429}:
                 logger.warning(f"[IP-Query] 源 {api['name']} 触发风控，正在尝试下一个...")
                 continue

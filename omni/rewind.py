@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import time
 from dataclasses import dataclass, field
 
@@ -11,6 +12,7 @@ MAX_ROUNDS = 10
 EXPIRE_SECONDS = 30 * 60
 USAGE = "用法：/回退 [轮数]（1-10，默认 1）；/取消回退 恢复刚才删掉的对话"
 _SYSTEM_MARKERS = ("<RAG", "Memory>", "history_knowledge")
+_REMINDER = re.compile(r"<system_reminder>.*?(</system_reminder>|$)", re.S)
 
 
 @dataclass
@@ -56,16 +58,17 @@ def split_rounds(history: list[dict], rounds: int) -> tuple[list[dict], list[dic
 
 
 def _plain(content) -> str:
-    if isinstance(content, str):
-        return content.strip()
+    """提取消息里用户能看到的文字，去掉 AstrBot 注入的 system_reminder、知识库等内容。"""
     if isinstance(content, list):
         parts = [
             str(item.get("text", ""))
             for item in content
             if isinstance(item, dict) and item.get("type") == "text"
         ]
-        return "".join(p for p in parts if not any(m in p for m in _SYSTEM_MARKERS)).strip()
-    return str(content or "").strip()
+        text = "".join(p for p in parts if not any(m in p for m in _SYSTEM_MARKERS))
+    else:
+        text = content if isinstance(content, str) else str(content or "")
+    return _REMINDER.sub("", text).strip()
 
 
 def _short(text: str, limit: int = 50) -> str:

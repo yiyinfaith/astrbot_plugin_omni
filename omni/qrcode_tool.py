@@ -6,8 +6,7 @@ import io
 import re
 
 URL_PATTERN = re.compile(r"https?://\S+")
-GEN_USAGE = "⚠️ 请提供链接或文字，例如：/qr https://example.com"
-DECODE_USAGE = "📷 请在 {seconds} 秒内发送二维码图片（也可以直接引用带二维码的图片发送 /qr_decode）"
+WAIT_TEXT = "📷 请在 {seconds} 秒内发送二维码图片，我来识别成链接\n生成二维码请发送：/二维码 链接或文字"
 
 
 def make_qr(text: str) -> bytes:

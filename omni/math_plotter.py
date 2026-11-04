@@ -443,7 +443,7 @@ class MathPlotterCore:
             ylabel(string): y 轴标签，留空默认 "y"
         """
         try:
-            expr_list = [e.strip() for e in expressions.split(",") if e.strip()]
+            expr_list = [e.strip() for e in expressions.split(";" if ";" in expressions else ",") if e.strip()]
             if len(expr_list) < 2:
                 return "❌ 请提供至少 2 个逗号分隔的表达式，例如：sin(x),cos(x)"
             if len(expr_list) > 6:
@@ -992,7 +992,7 @@ class MathPlotterCore:
             zlabel(string): z 轴标签，留空默认 "z"
         """
         try:
-            expr_list = [e.strip() for e in expressions.split(",") if e.strip()]
+            expr_list = [e.strip() for e in expressions.split(";" if ";" in expressions else ",") if e.strip()]
             if len(expr_list) < 2:
                 return "❌ 请提供至少 2 个逗号分隔的表达式。"
             if len(expr_list) > 5:

@@ -13,26 +13,6 @@ IMAGE_HEADERS = {
     "Referer": "https://www.xiaohongshu.com/",
     "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
 }
-GUIDE_TEXT = "📝 使用 /答案 你的答案 作答\n💡 查看提示：/提示 或 /hint"
-NO_QUESTION = "ℹ️ 当前没有待作答的题目，请先使用 /梗图 获取题目"
-NO_KEY = "❌ 梗图猜词需要柠柚 API Key，请管理员在插件配置「柠柚 API」中填写"
-HELP_TEXT = """🎯 梗图抽象猜词使用说明
-
-🖼️ 获取题目：
-• /梗图 或 /gengtu
-
-📝 提交答案：
-• /答案 你的答案
-  例如：/答案 六六大顺
-
-💡 获取提示：
-• /提示 或 /hint
-  显示当前题目的正确答案，但仍需要正确回答才能完成题目
-
-💡 说明：
-• 发送图片后，会为你记录题目编号（每人独立）
-• 回答错误时不会显示正确答案，需要使用 /提示 命令查看
-• 如需新的题目，直接再次输入 /梗图"""
 
 
 class Gengtu:

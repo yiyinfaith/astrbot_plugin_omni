@@ -42,12 +42,12 @@ WHOIS_ALL_API_FAILED_MESSAGE = (
 )
 IP_USAGE = (
     "❌ 请提供需要查询的 IPv4 地址、IPv6 地址或域名。\n\n"
-    "用法：/ip <IP地址或域名>\n"
-    "例如：/ip 8.8.8.8\n"
-    "例如：/ip 2400:3200::1\n"
-    "例如：/ip example.com"
+    "用法：/查IP <IP地址或域名>\n"
+    "例如：/查IP 8.8.8.8\n"
+    "例如：/查IP 2400:3200::1\n"
+    "例如：/查IP example.com"
 )
-WHOIS_USAGE = "❌ 请提供需要查询的域名信息。\n\n用法：/whois <域名>\n例如：/whois github.com"
+WHOIS_USAGE = "❌ 请提供需要查询的域名信息。\n\n用法：/查域名 <域名>\n例如：/查域名 github.com"
 
 
 def first_arg(message: str, command: str) -> str:

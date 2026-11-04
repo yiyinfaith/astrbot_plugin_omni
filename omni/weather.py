@@ -16,13 +16,7 @@ SUGGESTION_NAMES = {
     "dressing": "穿衣", "umbrella": "雨伞", "car_washing": "洗车",
     "flu": "感冒", "sport": "运动", "uv": "紫外线",
 }
-NO_KEY = "未配置心知天气 API Key，无法查询天气。请在插件配置「天气设置」中填写后再试。"
-HELP_TEXT = (
-    "=== 心知天气插件命令列表 ===\n"
-    "/weather current <城市>  查看当前实况\n"
-    "/weather forecast <城市> 查看未来3天天气预报及生活指数\n"
-    "/weather help            显示本帮助\n"
-)
+NO_KEY = "未配置心知天气 API Key，无法查询天气。请在插件配置「天气」中填写后再试。"
 
 
 async def _results(url: str, params: dict) -> list | None:

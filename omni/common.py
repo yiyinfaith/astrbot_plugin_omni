@@ -25,11 +25,6 @@ def section(config: Any, name: str) -> dict:
     return value if isinstance(value, dict) else {}
 
 
-def setting(config: Any, group: str, key: str, default: Any = None) -> Any:
-    value = section(config, group).get(key)
-    return default if value is None else value
-
-
 def command_rest(event: Any) -> str:
     """去掉指令名后的参数文本，例如 `fy 英语 你好` -> `英语 你好`。"""
     parts = (getattr(event, "message_str", "") or "").strip().split(maxsplit=1)

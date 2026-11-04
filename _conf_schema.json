@@ -1,128 +1,7 @@
 {
-  "enable_left_brain": {
-    "description": "启用左右脑互搏功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`左右脑互搏`指令（需要已配置对话模型）"
-  },
-  "enable_look_leg": {
-    "description": "启用看看腿功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`看看腿`图片获取"
-  },
-  "enable_history_today": {
-    "description": "启用历史上的今天功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`历史上的今天`"
-  },
-  "enable_emoji_mix": {
-    "description": "启用 Emoji 合成功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`合成 😀😭`"
-  },
-  "enable_dot_matrix": {
-    "description": "启用点阵字功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`点阵字 内容 填充字`"
-  },
-  "enable_jrrp": {
-    "description": "启用今日人品功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/jrrp`指令"
-  },
-  "enable_sensoji": {
-    "description": "启用浅草寺抽签功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/抽签`、`/转运`、`/解签`、`/抽签帮助`指令和 explain_fortune 函数工具"
-  },
-  "enable_runes": {
-    "description": "启用卢恩占卜功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/卢恩占卜`指令（解读需要已配置对话模型）"
-  },
-  "enable_gengtu": {
-    "description": "启用梗图猜词功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/梗图`、`/答案`、`/提示`、`/梗图帮助`指令（需要柠柚 API Key）"
-  },
-  "enable_safebooru": {
-    "description": "启用 Safebooru 图片功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/safebooru`、`/safebooru_random`指令"
-  },
-  "enable_tagger": {
-    "description": "启用图片标签识别功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/tag`指令"
-  },
-  "enable_qrcode": {
-    "description": "启用二维码功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/qr`生成与`/qr_decode`（二维码转链接）指令"
-  },
-  "enable_weather": {
-    "description": "启用天气查询功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/weather`指令和天气函数工具（需要心知天气 API Key）"
-  },
-  "enable_translation": {
-    "description": "启用百度翻译功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/fy`指令（需要百度翻译 APPID 和密钥）"
-  },
-  "enable_ipquery": {
-    "description": "启用 IP / Whois 查询功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/ip`、`/whois`指令"
-  },
-  "enable_aicu": {
-    "description": "启用 B 站评论查询（AICU）功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/uid`指令"
-  },
-  "enable_math_plotter": {
-    "description": "启用数学绘图功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`/plot`等绘图指令和全部绘图函数工具"
-  },
-  "enable_primermath": {
-    "description": "启用四则运算工具",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后 LLM 将无法调用 FFRadd、FFRminus、FFRmul、FFRdid、FFRcomp 函数工具"
-  },
-  "enable_markdown2img": {
-    "description": "启用 Markdown 转图片功能",
-    "type": "bool",
-    "default": true,
-    "hint": "开启后会提示 LLM 把复杂格式写进 <md></md>，并将其渲染为图片发送"
-  },
-  "enable_zanwo": {
-    "description": "启用点赞功能",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后将禁用`赞我`和订阅点赞相关指令（仅 QQ / aiocqhttp）"
-  },
   "nycnm": {
-    "description": "柠柚 API",
+    "description": "柠柚 API（梗图猜词、历史上的今天共用）",
     "type": "object",
-    "hint": "梗图猜词和历史上的今天共用",
     "items": {
       "api_key": {
         "description": "柠柚 API Key",
@@ -138,47 +17,114 @@
       }
     }
   },
-  "fun": {
-    "description": "娱乐小功能设置",
+  "left_brain": {
+    "description": "左右脑互搏",
     "type": "object",
     "items": {
-      "look_leg_api": {
-        "description": "看看腿图片接口",
-        "type": "string",
-        "default": "https://api.nycnm.cn/api/v2/meitui1",
-        "hint": "直接返回图片，或返回含图片链接的 JSON 均可"
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/左右脑互搏 [回合数]`，需要已配置对话模型"
       },
-      "history_format": {
-        "description": "历史上的今天发送形式",
-        "type": "string",
-        "options": ["image", "text"],
-        "labels": ["图片", "文字"],
-        "default": "image",
-        "hint": "使用柠柚接口；未填柠柚 API Key 时改用免费文字接口"
-      },
-      "left_brain_max_rounds": {
-        "description": "左右脑互搏最大回合数",
+      "max_rounds": {
+        "description": "最大回合数",
         "type": "int",
         "default": 10,
-        "hint": "指令可写回合数，如`/左右脑互搏 5`，默认 3 回合"
+        "hint": "不写回合数时默认 3 回合"
       }
     }
   },
-  "gengtu": {
-    "description": "梗图猜词设置",
+  "look_leg": {
+    "description": "看看腿",
     "type": "object",
     "items": {
-      "api_url": {
-        "description": "梗图接口地址",
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "消息含“看看腿”时发送随机图片"
+      },
+      "api": {
+        "description": "图片接口",
         "type": "string",
-        "default": "https://api.nycnm.cn/api/v2/gengtu"
+        "default": "https://api.nycnm.cn/api/v2/meitui1",
+        "hint": "直接返回图片，或返回含图片链接的 JSON 均可"
+      }
+    }
+  },
+  "history_today": {
+    "description": "历史上的今天",
+    "type": "object",
+    "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "消息含“历史上的今天”时发送"
+      },
+      "format": {
+        "description": "发送形式",
+        "type": "string",
+        "options": [
+          "image",
+          "text"
+        ],
+        "labels": [
+          "图片",
+          "文字"
+        ],
+        "default": "image",
+        "hint": "使用柠柚接口；未填柠柚 API Key 时改用免费文字接口"
+      }
+    }
+  },
+  "emoji_mix": {
+    "description": "Emoji 合成",
+    "type": "object",
+    "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`合成 😀😭`"
+      }
+    }
+  },
+  "dot_matrix": {
+    "description": "点阵字",
+    "type": "object",
+    "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`点阵字 内容 填充字`"
+      }
+    }
+  },
+  "jrrp": {
+    "description": "今日人品",
+    "type": "object",
+    "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/今日人品`"
       }
     }
   },
   "sensoji": {
-    "description": "浅草寺抽签设置",
+    "description": "浅草寺抽签",
     "type": "object",
     "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/抽签`、`/转运`、`/解签` 和 explain_fortune 函数工具"
+      },
       "enable_change_fortune": {
         "description": "是否启用转运功能",
         "type": "bool",
@@ -199,13 +145,23 @@
     }
   },
   "runes": {
-    "description": "卢恩占卜设置",
+    "description": "卢恩占卜",
     "type": "object",
     "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/卢恩占卜`，解读需要已配置对话模型"
+      },
       "interpretation_depth": {
         "description": "解释深度",
         "type": "string",
-        "options": ["简洁", "详细", "深度"],
+        "options": [
+          "简洁",
+          "详细",
+          "深度"
+        ],
         "default": "详细"
       },
       "include_history": {
@@ -216,10 +172,33 @@
       }
     }
   },
-  "safebooru": {
-    "description": "Safebooru 设置",
+  "gengtu": {
+    "description": "梗图猜词",
     "type": "object",
     "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/梗图`、`/答案`，需要柠柚 API Key"
+      },
+      "api_url": {
+        "description": "梗图接口地址",
+        "type": "string",
+        "default": "https://api.nycnm.cn/api/v2/gengtu"
+      }
+    }
+  },
+  "safebooru": {
+    "description": "随机图片（Safebooru）",
+    "type": "object",
+    "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/随机图片 [标签]`"
+      },
       "limit": {
         "description": "API 返回图片的数量上限",
         "type": "int",
@@ -234,9 +213,15 @@
     }
   },
   "tagger": {
-    "description": "图片标签识别设置",
+    "description": "图片标签识别",
     "type": "object",
     "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/tag`"
+      },
       "api_url": {
         "description": "Gradio 接口地址",
         "type": "string",
@@ -268,21 +253,33 @@
     }
   },
   "qrcode": {
-    "description": "二维码设置",
+    "description": "二维码",
     "type": "object",
     "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/二维码`：带内容生成，带图识别"
+      },
       "wait_seconds": {
         "description": "等待图片时长（秒）",
         "type": "int",
         "default": 60,
-        "hint": "/qr_decode 没带图片时，在这段时间内等待同一用户发图"
+        "hint": "/二维码 不带内容和图片时，在这段时间内等待同一用户发图"
       }
     }
   },
   "weather": {
-    "description": "天气设置",
+    "description": "天气",
     "type": "object",
     "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/天气 [城市]` 和 get_weather 函数工具，需要心知天气 API 私钥"
+      },
       "seniverse_api_key": {
         "description": "心知天气 API 私钥",
         "type": "string",
@@ -299,16 +296,28 @@
       "send_mode": {
         "description": "发送模式",
         "type": "string",
-        "options": ["text", "image"],
-        "labels": ["文字", "图片"],
+        "options": [
+          "text",
+          "image"
+        ],
+        "labels": [
+          "文字",
+          "图片"
+        ],
         "default": "text"
       }
     }
   },
   "translation": {
-    "description": "百度翻译设置",
+    "description": "百度翻译",
     "type": "object",
     "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/翻译 <语种> <内容>`"
+      },
       "appid": {
         "description": "APP ID",
         "type": "string",
@@ -324,10 +333,28 @@
       }
     }
   },
-  "aicu": {
-    "description": "B 站评论查询（AICU）设置",
+  "ipquery": {
+    "description": "IP / 域名查询",
     "type": "object",
     "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/查IP`、`/查域名`"
+      }
+    }
+  },
+  "aicu": {
+    "description": "B 站查询（AICU）",
+    "type": "object",
+    "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/B站查询 <UID>`"
+      },
       "cookie": {
         "description": "AICU 网站 Cookie",
         "type": "string",
@@ -338,9 +365,15 @@
     }
   },
   "math_plotter": {
-    "description": "数学绘图设置",
+    "description": "数学绘图",
     "type": "object",
     "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "plot_2d、plot_3d、plot_vectors 函数工具"
+      },
       "plot_dpi": {
         "description": "图像分辨率 (DPI)",
         "type": "int",
@@ -398,10 +431,40 @@
       }
     }
   },
-  "zanwo": {
-    "description": "点赞设置",
+  "calculate": {
+    "description": "精确计算",
     "type": "object",
     "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "calculate 函数工具，让 LLM 精确计算算式"
+      }
+    }
+  },
+  "markdown2img": {
+    "description": "Markdown 转图片",
+    "type": "object",
+    "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "提示 LLM 把复杂格式写进 <md></md>，发送时渲染成图片"
+      }
+    }
+  },
+  "zanwo": {
+    "description": "点赞",
+    "type": "object",
+    "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`赞我`、`/订阅点赞`、`/取消订阅点赞`，仅 QQ（aiocqhttp）"
+      },
       "white_list_groups": {
         "description": "群聊白名单",
         "type": "list",

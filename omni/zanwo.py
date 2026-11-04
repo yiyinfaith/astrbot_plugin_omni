@@ -71,10 +71,3 @@ async def like_users(client, ids: list[str]) -> str:
         replies.append(reply.replace("{username}", str(username)).replace("{total_likes}", str(total)))
     return "\n".join(replies).strip()
 
-
-def profile_like_text(data: dict) -> str:
-    reply = ""
-    for user in (data or {}).get("favoriteInfo", {}).get("userInfos", []) or []:
-        if user.get("nick") and (user.get("count") or 0) > 0:
-            reply += f"\n【{user['nick']}】赞了我{user['count']}次"
-    return reply or "暂无有效的点赞信息"

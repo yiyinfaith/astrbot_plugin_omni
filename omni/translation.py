@@ -19,12 +19,10 @@ LANGUAGE_CODE_MAP = {
     "匈牙利语": "hu", "繁体中文": "cht", "越南语": "vie",
 }
 
-USAGE = "格式错误，请使用 /fy <目标语种> <翻译的内容> 或 /fy help 查看帮助。"
-
 
 def help_text() -> str:
     names = list(LANGUAGE_CODE_MAP)
-    lines = ["翻译插件使用说明：", "/fy <目标语种> <翻译的内容>", "", "目标语种支持："]
+    lines = ["用法：/翻译 <目标语种> <内容>", "例如：/翻译 英语 你好世界", "", "支持的语种："]
     for i in range(0, len(names), 3):
         lines.append("  ".join(names[i:i + 3]))
     return "\n".join(lines)
@@ -32,7 +30,7 @@ def help_text() -> str:
 
 async def translate(appid: str, secret: str, target_name: str, text: str) -> str:
     if not appid or not secret:
-        return "❌ 翻译功能未配置！请管理员在插件配置「百度翻译设置」中填写 APP ID 和密钥。"
+        return "❌ 翻译功能未配置！请管理员在插件配置「百度翻译」中填写 APP ID 和密钥。"
     target = LANGUAGE_CODE_MAP.get(target_name)
     if not target:
         return f"不支持的目标语种: {target_name}"

@@ -1,0 +1,24 @@
+# 只上传插件运行需要的文件；测试、缓存和运行时数据都不进仓库
+/tests/
+test_*.py
+*_test.py
+conftest.py
+pytest.ini
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+uv.lock
+.coverage
+htmlcov/
+
+# 运行时数据存放在 AstrBot 的 data/plugin_data
+/data/
+/plots/
+/output/
+/tmp/
+*.log
+.env
+.env.*

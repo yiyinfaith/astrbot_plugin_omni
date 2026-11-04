@@ -1,0 +1,9 @@
+# 发布包（GitHub zip / git archive）不带 README 用的图片
+assets/ export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+* text=auto eol=lf
+*.ttf binary
+*.otf binary
+*.jpg binary
+*.png binary

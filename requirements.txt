@@ -1,0 +1,13 @@
+aiohttp
+httpx
+Pillow
+qrcode
+pyzbar
+mistune
+playwright
+curl_cffi
+jinja2
+lxml
+matplotlib>=3.8.0
+numpy>=1.24.0
+sympy>=1.11.0

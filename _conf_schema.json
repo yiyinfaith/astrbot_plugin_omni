@@ -1,0 +1,425 @@
+{
+  "enable_left_brain": {
+    "description": "启用左右脑互搏功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`左右脑互搏`指令（需要已配置对话模型）"
+  },
+  "enable_look_leg": {
+    "description": "启用看看腿功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`看看腿`图片获取"
+  },
+  "enable_history_today": {
+    "description": "启用历史上的今天功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`历史上的今天`"
+  },
+  "enable_emoji_mix": {
+    "description": "启用 Emoji 合成功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`合成 😀😭`"
+  },
+  "enable_dot_matrix": {
+    "description": "启用点阵字功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`点阵字 内容 填充字`"
+  },
+  "enable_jrrp": {
+    "description": "启用今日人品功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/jrrp`指令"
+  },
+  "enable_sensoji": {
+    "description": "启用浅草寺抽签功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/抽签`、`/转运`、`/解签`、`/抽签帮助`指令和 explain_fortune 函数工具"
+  },
+  "enable_runes": {
+    "description": "启用卢恩占卜功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/卢恩占卜`指令（解读需要已配置对话模型）"
+  },
+  "enable_gengtu": {
+    "description": "启用梗图猜词功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/梗图`、`/答案`、`/提示`、`/梗图帮助`指令（需要柠柚 API Key）"
+  },
+  "enable_safebooru": {
+    "description": "启用 Safebooru 图片功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/safebooru`、`/safebooru_random`指令"
+  },
+  "enable_tagger": {
+    "description": "启用图片标签识别功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/tag`指令"
+  },
+  "enable_qrcode": {
+    "description": "启用二维码功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/qr`生成与`/qr_decode`（二维码转链接）指令"
+  },
+  "enable_weather": {
+    "description": "启用天气查询功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/weather`指令和天气函数工具（需要心知天气 API Key）"
+  },
+  "enable_translation": {
+    "description": "启用百度翻译功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/fy`指令（需要百度翻译 APPID 和密钥）"
+  },
+  "enable_ipquery": {
+    "description": "启用 IP / Whois 查询功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/ip`、`/whois`指令"
+  },
+  "enable_aicu": {
+    "description": "启用 B 站评论查询（AICU）功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/uid`指令"
+  },
+  "enable_math_plotter": {
+    "description": "启用数学绘图功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`/plot`等绘图指令和全部绘图函数工具"
+  },
+  "enable_primermath": {
+    "description": "启用四则运算工具",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后 LLM 将无法调用 FFRadd、FFRminus、FFRmul、FFRdid、FFRcomp 函数工具"
+  },
+  "enable_markdown2img": {
+    "description": "启用 Markdown 转图片功能",
+    "type": "bool",
+    "default": true,
+    "hint": "开启后会提示 LLM 把复杂格式写进 <md></md>，并将其渲染为图片发送"
+  },
+  "enable_zanwo": {
+    "description": "启用点赞功能",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后将禁用`赞我`和订阅点赞相关指令（仅 QQ / aiocqhttp）"
+  },
+  "nycnm": {
+    "description": "柠柚 API",
+    "type": "object",
+    "hint": "梗图猜词和历史上的今天共用",
+    "items": {
+      "api_key": {
+        "description": "柠柚 API Key",
+        "type": "string",
+        "default": "",
+        "secret": true,
+        "hint": "在 https://api.nycnm.cn 注册后于用户中心获取"
+      },
+      "timeout": {
+        "description": "请求超时（秒）",
+        "type": "int",
+        "default": 10
+      }
+    }
+  },
+  "fun": {
+    "description": "娱乐小功能设置",
+    "type": "object",
+    "items": {
+      "look_leg_api": {
+        "description": "看看腿图片接口",
+        "type": "string",
+        "default": "https://api.nycnm.cn/api/v2/meitui1",
+        "hint": "直接返回图片，或返回含图片链接的 JSON 均可"
+      },
+      "history_format": {
+        "description": "历史上的今天发送形式",
+        "type": "string",
+        "options": ["image", "text"],
+        "labels": ["图片", "文字"],
+        "default": "image",
+        "hint": "使用柠柚接口；未填柠柚 API Key 时改用免费文字接口"
+      },
+      "left_brain_max_rounds": {
+        "description": "左右脑互搏最大回合数",
+        "type": "int",
+        "default": 10,
+        "hint": "指令可写回合数，如`/左右脑互搏 5`，默认 3 回合"
+      }
+    }
+  },
+  "gengtu": {
+    "description": "梗图猜词设置",
+    "type": "object",
+    "items": {
+      "api_url": {
+        "description": "梗图接口地址",
+        "type": "string",
+        "default": "https://api.nycnm.cn/api/v2/gengtu"
+      }
+    }
+  },
+  "sensoji": {
+    "description": "浅草寺抽签设置",
+    "type": "object",
+    "items": {
+      "enable_change_fortune": {
+        "description": "是否启用转运功能",
+        "type": "bool",
+        "default": true,
+        "hint": "关闭后用户将无法使用转运功能"
+      },
+      "max_change_fortune_times": {
+        "description": "每日最大转运次数（0 表示不限制）",
+        "type": "int",
+        "default": 3
+      },
+      "daily_cleanup": {
+        "description": "签文图片保留天数",
+        "type": "int",
+        "default": 1,
+        "hint": "超过该天数的签文图片会被自动删除，0 表示不清理"
+      }
+    }
+  },
+  "runes": {
+    "description": "卢恩占卜设置",
+    "type": "object",
+    "items": {
+      "interpretation_depth": {
+        "description": "解释深度",
+        "type": "string",
+        "options": ["简洁", "详细", "深度"],
+        "default": "详细"
+      },
+      "include_history": {
+        "description": "包含历史解读",
+        "type": "bool",
+        "default": true,
+        "hint": "是否在解读中包含符文的历史背景"
+      }
+    }
+  },
+  "safebooru": {
+    "description": "Safebooru 设置",
+    "type": "object",
+    "items": {
+      "limit": {
+        "description": "API 返回图片的数量上限",
+        "type": "int",
+        "default": 100,
+        "hint": "同一标签会依次轮换这些图片，建议 100 以内"
+      },
+      "display_tags": {
+        "description": "发送图片前显示 tags",
+        "type": "bool",
+        "default": false
+      }
+    }
+  },
+  "tagger": {
+    "description": "图片标签识别设置",
+    "type": "object",
+    "items": {
+      "api_url": {
+        "description": "Gradio 接口地址",
+        "type": "string",
+        "default": "https://smilingwolf-wd-tagger.hf.space/gradio_api",
+        "hint": "WD Tagger 类 Gradio 应用的 API 根地址（以 /gradio_api 结尾），可换成自建的同款 Space"
+      },
+      "model": {
+        "description": "识别模型",
+        "type": "string",
+        "default": "SmilingWolf/wd-swinv2-tagger-v3",
+        "hint": "填写该 Space 支持的模型名"
+      },
+      "general_threshold": {
+        "description": "普通标签阈值",
+        "type": "float",
+        "default": 0.35
+      },
+      "character_threshold": {
+        "description": "角色标签阈值",
+        "type": "float",
+        "default": 0.85
+      },
+      "wait_seconds": {
+        "description": "等待图片时长（秒）",
+        "type": "int",
+        "default": 60,
+        "hint": "/tag 没带图片时，在这段时间内等待同一用户发图"
+      }
+    }
+  },
+  "qrcode": {
+    "description": "二维码设置",
+    "type": "object",
+    "items": {
+      "wait_seconds": {
+        "description": "等待图片时长（秒）",
+        "type": "int",
+        "default": 60,
+        "hint": "/qr_decode 没带图片时，在这段时间内等待同一用户发图"
+      }
+    }
+  },
+  "weather": {
+    "description": "天气设置",
+    "type": "object",
+    "items": {
+      "seniverse_api_key": {
+        "description": "心知天气 API 私钥",
+        "type": "string",
+        "default": "",
+        "secret": true,
+        "hint": "在 https://www.seniverse.com 注册，控制台 → 产品管理 → 免费版 → 复制「私钥」"
+      },
+      "default_city": {
+        "description": "默认城市",
+        "type": "string",
+        "default": "上海",
+        "hint": "用户没有输入城市时使用"
+      },
+      "send_mode": {
+        "description": "发送模式",
+        "type": "string",
+        "options": ["text", "image"],
+        "labels": ["文字", "图片"],
+        "default": "text"
+      }
+    }
+  },
+  "translation": {
+    "description": "百度翻译设置",
+    "type": "object",
+    "items": {
+      "appid": {
+        "description": "APP ID",
+        "type": "string",
+        "default": "",
+        "hint": "在 https://fanyi-api.baidu.com 开通通用文本翻译后，在「管理控制台 → 开发者信息」查看"
+      },
+      "secret_key": {
+        "description": "密钥",
+        "type": "string",
+        "default": "",
+        "secret": true,
+        "hint": "与 APP ID 在同一页面"
+      }
+    }
+  },
+  "aicu": {
+    "description": "B 站评论查询（AICU）设置",
+    "type": "object",
+    "items": {
+      "cookie": {
+        "description": "AICU 网站 Cookie",
+        "type": "string",
+        "default": "",
+        "secret": true,
+        "hint": "可选，需包含 ASession=...；浏览器登录 aicu.cc 后按 F12 在网络请求中复制。不填时设备信息不可用"
+      }
+    }
+  },
+  "math_plotter": {
+    "description": "数学绘图设置",
+    "type": "object",
+    "items": {
+      "plot_dpi": {
+        "description": "图像分辨率 (DPI)",
+        "type": "int",
+        "default": 120,
+        "hint": "建议 100-200，越高越清晰、文件越大"
+      },
+      "default_x_range": {
+        "description": "默认 x 轴范围",
+        "type": "string",
+        "default": "-10,10",
+        "hint": "格式：最小值,最大值"
+      },
+      "line_width": {
+        "description": "曲线线宽",
+        "type": "float",
+        "default": 2.0
+      },
+      "grid_alpha": {
+        "description": "网格透明度",
+        "type": "float",
+        "default": 0.3,
+        "hint": "0 为完全透明，1 为完全不透明"
+      },
+      "plot_3d_grid_density": {
+        "description": "3D 曲面网格密度",
+        "type": "int",
+        "default": 200,
+        "hint": "每个轴上的采样点数，建议 100-400"
+      },
+      "plot_3d_cmap": {
+        "description": "3D 曲面配色方案",
+        "type": "string",
+        "default": "viridis",
+        "hint": "matplotlib colormap 名称，如 viridis、plasma、coolwarm"
+      },
+      "plot_3d_alpha": {
+        "description": "3D 曲面透明度",
+        "type": "float",
+        "default": 0.88
+      },
+      "plot_3d_contour_offset": {
+        "description": "在底面投影等值线",
+        "type": "bool",
+        "default": true
+      },
+      "plot_3d_elev": {
+        "description": "3D 视图仰角（度）",
+        "type": "int",
+        "default": 25
+      },
+      "plot_3d_azim": {
+        "description": "3D 视图方位角（度）",
+        "type": "int",
+        "default": -60
+      }
+    }
+  },
+  "zanwo": {
+    "description": "点赞设置",
+    "type": "object",
+    "items": {
+      "white_list_groups": {
+        "description": "群聊白名单",
+        "type": "list",
+        "default": [],
+        "hint": "填写后只有这些群能用点赞；留空则所有群可用"
+      },
+      "subscribed_users": {
+        "description": "订阅点赞的用户",
+        "type": "list",
+        "default": [],
+        "hint": "每天首次有人点赞时，自动给这些 QQ 号点赞；用户可用 /订阅点赞 自行加入"
+      },
+      "zanwo_date": {
+        "description": "上次自动点赞日期",
+        "type": "string",
+        "default": "2025-01-01",
+        "invisible": true
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+# ICANN EPP状态码汉化表
+# 参考: https://www.icann.org/resources/pages/epp-status-codes-2014-06-16-zh
+# client前缀 = 注册商操作
+# server前缀 = 注册局操作
+# 注: 状态码通常逗号分隔列出, 表示域名同时处于多个状态
+
+
+ok = "正常"
+inactive = "未激活"
+
+# === 禁止类 ===
+clientDeleteProhibited = "禁止删除"
+clientTransferProhibited = "禁止转移"
+clientUpdateProhibited = "禁止更新"
+clientRenewProhibited = "禁止续费"
+clientHold = "客户端暂停解析"
+
+# === 禁止类 ===
+serverDeleteProhibited = "服务器端禁止删除"
+serverTransferProhibited = "服务器端禁止转移"
+serverUpdateProhibited = "服务器端禁止更新"
+serverRenewProhibited = "服务器端禁止续费"
+serverHold = "服务器端暂停解析"
+
+# === 处理中/过渡类 ===
+pendingCreate = "注册处理中"
+pendingDelete = "删除处理中"
+pendingTransfer = "转移处理中"
+pendingUpdate = "更新处理中"
+pendingRenew = "续费处理中"
+pendingRestore = "恢复处理中"
+pendingVerification = "验证处理中"
+
+# === 周期类 ===
+addPeriod = "新注册期"
+renewPeriod = "续费期"
+transferPeriod = "转移期"
+autoRenewPeriod = "自动续费期"
+
+# === 过期/删除流程类 ===
+redemptionPeriod = "赎回期"
+
+# === 其他 ===
+linked = "已关联"
+unlinked = "未关联"

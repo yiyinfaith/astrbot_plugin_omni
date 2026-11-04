@@ -25,6 +25,7 @@ from .omni import (
     markdown2img,
     plot_tools,
     qrcode_tool,
+    rewind,
     runes,
     simple,
     tagger,
@@ -59,11 +60,13 @@ FEATURE_TOOLS = {
 }
 # 处理函数 -> 所属功能。功能关闭时把这些指令设为禁用，不再被匹配，也不会出现在指令列表里
 HANDLER_FEATURES = {
-    "left_brain": "left_brain", "jrrp": "jrrp", "sensoji_draw": "sensoji", "sensoji_change": "sensoji",
+    "left_brain": "left_brain", "history_today": "history_today", "dot_matrix": "dot_matrix",
+    "look_leg": "look_leg", "emoji_mix": "emoji_mix", "jrrp": "jrrp", "sensoji_draw": "sensoji", "sensoji_change": "sensoji",
     "sensoji_explain": "sensoji", "runes_divination": "runes", "gengtu_question": "gengtu",
     "gengtu_answer": "gengtu", "random_image": "safebooru", "tag": "tagger", "qrcode": "qrcode",
     "weather_cmd": "weather", "translate_cmd": "translation", "ip_query": "ipquery", "whois_query": "ipquery",
     "aicu_uid": "aicu", "like_me": "zanwo", "subscribe_like": "zanwo", "unsubscribe_like": "zanwo",
+    "rewind_cmd": "rewind", "cancel_rewind": "rewind",
 }
 TAG_COMMANDS = {"tag"}
 QR_COMMANDS = {"二维码", "扫码"}
@@ -81,6 +84,7 @@ class OmniPlugin(Star):
         self.sensoji = Sensoji(self.data_dir, PLUGIN_DIR / "fonts")
         self.tag_waiter = ImageWaiter()
         self.qr_waiter = ImageWaiter()
+        self.rewinder = rewind.Rewinder()
         self._math = None
         self._background: set[asyncio.Task] = set()
 
@@ -144,6 +148,8 @@ class OmniPlugin(Star):
     @filter.on_llm_request()
     async def on_llm_request(self, event: AstrMessageEvent, req: ProviderRequest):
         """关闭的功能不把函数工具交给 LLM；开启 Markdown 转图片时注入使用说明。"""
+        # 会话里开始新的对话后，之前回退的内容不能再恢复，否则顺序会乱
+        self.rewinder.drop(event.unified_msg_origin)
         tool_set = getattr(req, "func_tool", None)
         if tool_set is not None:
             for feature, names in FEATURE_TOOLS.items():
@@ -180,7 +186,7 @@ class OmniPlugin(Star):
                     new_chain.append(Comp.Plain(f"--- Markdown 渲染异常 ---\n{content}"))
         result.chain = new_chain
 
-    # ------------------------------------------------------------ 任意消息：关键词与等待发图
+    # ------------------------------------------------------------ 任意消息：等待发图
 
     @filter.event_message_type(filter.EventMessageType.ALL)
     async def on_any_message(self, event: AstrMessageEvent):
@@ -192,21 +198,6 @@ class OmniPlugin(Star):
                 yield result
         if first not in QR_COMMANDS:
             async for result in self._qr_waiting(event):
-                yield result
-
-        if not text:
-            return
-        if "历史上的今天" in text and self._on("history_today"):
-            async for result in self._history_today(event):
-                yield result
-        elif "点阵字" in text and self._on("dot_matrix"):
-            async for result in self._dot_matrix(event, text):
-                yield result
-        elif "看看腿" in text and self._on("look_leg"):
-            async for result in self._look_leg(event):
-                yield result
-        elif text.startswith("合成") and self._on("emoji_mix"):
-            async for result in self._emoji_mix(event, text):
                 yield result
 
     # ------------------------------------------------------------ 娱乐小功能（原 meaning）
@@ -238,7 +229,11 @@ class OmniPlugin(Star):
         chain.append(Comp.Plain(("" if chain else "🎲") + f"\n🏁 最终结果：{end_text}"))
         yield event.chain_result(chain)
 
-    async def _history_today(self, event: AstrMessageEvent):
+    @filter.command("历史上的今天")
+    async def history_today(self, event: AstrMessageEvent):
+        """历史上的今天"""
+        if not self._on("history_today"):
+            return
         key, seconds = self._nycnm()
         try:
             kind, payload = await fun.history_today(
@@ -253,8 +248,12 @@ class OmniPlugin(Star):
         else:
             yield event.plain_result(payload)
 
-    async def _dot_matrix(self, event: AstrMessageEvent, text: str):
-        parsed = fun.parse_dot_matrix(text)
+    @filter.command("点阵字")
+    async def dot_matrix(self, event: AstrMessageEvent):
+        """点阵字 内容 填充字"""
+        if not self._on("dot_matrix"):
+            return
+        parsed = fun.parse_dot_matrix(event.message_str or "")
         if not parsed:
             yield event.plain_result(fun.DOT_USAGE)
             return
@@ -267,7 +266,11 @@ class OmniPlugin(Star):
             return
         yield event.plain_result(f".\n{art}")
 
-    async def _look_leg(self, event: AstrMessageEvent):
+    @filter.command("看看腿")
+    async def look_leg(self, event: AstrMessageEvent):
+        """随机看看腿"""
+        if not self._on("look_leg"):
+            return
         try:
             data = await fun.look_leg(str(self._cfg("look_leg").get("api") or ""))
         except Exception as exc:
@@ -276,9 +279,17 @@ class OmniPlugin(Star):
             return
         yield event.image_result(self._image_file(data, "leg"))
 
-    async def _emoji_mix(self, event: AstrMessageEvent, text: str):
-        emojis = fun.extract_emojis(text[2:])
-        if len(emojis) < 2:
+    @filter.regex(r"^合成")
+    async def emoji_mix(self, event: AstrMessageEvent):
+        """合成两个 Emoji：/合成😀😭，可不加空格"""
+        # 正则不像指令那样要求唤醒，这里补上：必须带前缀、@机器人或在私聊中
+        if not event.is_at_or_wake_command or not self._on("emoji_mix"):
+            return
+        emojis = fun.parse_emoji_mix((event.message_str or "").strip())
+        if emojis is None:
+            return
+        if len(emojis) != 2:
+            yield event.plain_result(fun.EMOJI_USAGE)
             return
         try:
             url = await fun.emoji_mix(emojis[0], emojis[1])
@@ -293,6 +304,33 @@ class OmniPlugin(Star):
         except Exception:
             pass
         yield event.plain_result(f"🎨 Emoji合成结果：\n{emojis[0]} + {emojis[1]} =\n查看合成图片：{url}")
+
+    # ------------------------------------------------------------ 对话回退（原 llm_amnesia）
+
+    @filter.command("rewind", alias={"回退"})
+    async def rewind_cmd(self, event: AstrMessageEvent):
+        """回退最近几轮对话：/回退 [轮数]，/rewind cancel 撤销"""
+        if not self._on("rewind"):
+            return
+        arg = command_rest(event)
+        if arg.lower() == "cancel":
+            text = await self.rewinder.restore(self.context.conversation_manager, event.unified_msg_origin)
+        else:
+            rounds = rewind.parse_rounds(arg)
+            if rounds is None:
+                text = rewind.USAGE
+            else:
+                text = await self.rewinder.rewind(self.context.conversation_manager, event.unified_msg_origin, rounds)
+        yield event.plain_result(text)
+
+    @filter.command("取消回退")
+    async def cancel_rewind(self, event: AstrMessageEvent):
+        """恢复刚才回退掉的对话"""
+        if not self._on("rewind"):
+            return
+        yield event.plain_result(
+            await self.rewinder.restore(self.context.conversation_manager, event.unified_msg_origin)
+        )
 
     # ------------------------------------------------------------ 今日人品
 

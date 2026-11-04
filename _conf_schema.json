@@ -43,7 +43,7 @@
         "description": "启用",
         "type": "bool",
         "default": true,
-        "hint": "消息含“看看腿”时发送随机图片"
+        "hint": "`/看看腿` 发送随机图片"
       },
       "api": {
         "description": "图片接口",
@@ -61,7 +61,7 @@
         "description": "启用",
         "type": "bool",
         "default": true,
-        "hint": "消息含“历史上的今天”时发送"
+        "hint": "`/历史上的今天`"
       },
       "format": {
         "description": "发送形式",
@@ -87,7 +87,7 @@
         "description": "启用",
         "type": "bool",
         "default": true,
-        "hint": "`合成 😀😭`"
+        "hint": "`/合成😀😭`，可不加空格"
       }
     }
   },
@@ -99,7 +99,7 @@
         "description": "启用",
         "type": "bool",
         "default": true,
-        "hint": "`点阵字 内容 填充字`"
+        "hint": "`/点阵字 内容 填充字`"
       }
     }
   },
@@ -482,6 +482,18 @@
         "type": "string",
         "default": "2025-01-01",
         "invisible": true
+      }
+    }
+  },
+  "rewind": {
+    "description": "对话回退",
+    "type": "object",
+    "items": {
+      "enable": {
+        "description": "启用",
+        "type": "bool",
+        "default": true,
+        "hint": "`/回退 [轮数]`（`/rewind x`）删掉最近几轮对话，默认 1 轮、最多 10 轮；下一次对话前可用 `/取消回退`（`/rewind cancel`）恢复"
       }
     }
   }

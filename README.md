@@ -9,6 +9,10 @@
 | 功能 | 用法 | 说明 |
 | --- | --- | --- |
 | 左右脑互搏 | `/左右脑互搏 [回合数]` | 默认 3 回合，需要已配置对话模型 |
+| 看看腿 | `/看看腿` | 随机图片 |
+| 历史上的今天 | `/历史上的今天` | 图片或文字，可在配置中切换 |
+| Emoji 合成 | `/合成😀😭` | 合成两个 Emoji，可不加空格 |
+| 点阵字 | `/点阵字 <内容> <填充字>` | 如 `/点阵字 你好 好` |
 | 今日人品 | `/今日人品` | 每人每天固定 |
 | 浅草寺抽签 | `/抽签`、`/转运`、`/解签` | 每天一签，转运次数可配置；解签需要对话模型 |
 | 卢恩占卜 | `/卢恩占卜 单符\|三符\|五符\|九符\|符文表 [问题]` | 抽符后交给 LLM 解读 |
@@ -21,8 +25,7 @@
 | IP / 域名 | `/查IP <IP或域名>`、`/查域名 <域名>` | 归属地与运营商、Whois 注册信息 |
 | B 站查询 | `/B站查询 <UID>` | 基于 AICU 生成用户评论画像图 |
 | 点赞 | `赞我`、`赞@某人`、`/订阅点赞`、`/取消订阅点赞` | 仅 QQ（aiocqhttp）；订阅用户每天首次有人点赞时自动点赞 |
-
-关键词触发（不用加 `/`）：消息含 `看看腿`、`历史上的今天`；`合成 😀😭` 合成两个 Emoji；`点阵字 你好 好` 用填充字拼出点阵。
+| 对话回退 | `/回退 [轮数]`、`/取消回退` | 不满意回复时删掉最近几轮对话（默认 1 轮，最多 10 轮）重新提问；下一次对话前可恢复。英文写法 `/rewind x`、`/rewind cancel` |
 
 ## 函数工具
 
@@ -88,5 +91,6 @@
 [jrrp](https://github.com/exusiaiwei/jrrp)、
 [safebooru](https://github.com/Last-emo-boy/astrbot_plugin_safebooru)、
 [Translation](https://github.com/zengweis/astrbot_plugin_Translation)、
-[zanwo](https://github.com/Futureppo/astrbot_plugin_zanwo)。
+[zanwo](https://github.com/Futureppo/astrbot_plugin_zanwo)、
+[llm_amnesia](https://github.com/SinkAbyss/astrbot_plugin_llm_amnesia)。
 遵守本仓库许可证及各上游服务的使用要求。

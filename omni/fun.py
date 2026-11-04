@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import random
-import re
 import shutil
 import subprocess
 import unicodedata
@@ -86,6 +85,20 @@ def extract_emojis(text: str) -> list[str]:
     return [ch for ch in text if _is_emoji(ch)]
 
 
+EMOJI_USAGE = "用法：/合成😀😭（两个 Emoji，可不加空格）"
+# 变体选择符、零宽连接符、肤色修饰符，跟在 Emoji 后面，不算其他文字
+_EMOJI_EXTRAS = {0xFE0E, 0xFE0F, 0x200D} | set(range(0x1F3FB, 0x1F400))
+
+
+def parse_emoji_mix(text: str) -> list[str] | None:
+    """解析“合成”后的内容。含其他文字（如“合成孔径雷达”）时返回 None，不当作指令。"""
+    rest = text[2:] if text.startswith("合成") else text
+    others = [ch for ch in rest if not ch.isspace() and not _is_emoji(ch) and ord(ch) not in _EMOJI_EXTRAS]
+    if others:
+        return None
+    return [ch for ch in extract_emojis(rest) if ord(ch) not in _EMOJI_EXTRAS]
+
+
 async def emoji_mix(first: str, second: str) -> str:
     """返回合成图片链接。"""
     from urllib.parse import quote
@@ -145,7 +158,7 @@ def dot_matrix(text: str, fill: str, size: int = 16, max_chars: int = 8) -> str:
     return "\n\n".join(blocks)
 
 
-DOT_USAGE = "输入格式应为：点阵字 要转换的字 填充字"
+DOT_USAGE = "用法：/点阵字 内容 填充字，例如 /点阵字 你好 好"
 
 
 def parse_dot_matrix(text: str) -> tuple[str, str] | None:
@@ -154,5 +167,3 @@ def parse_dot_matrix(text: str) -> tuple[str, str] | None:
         return None
     return parts[1], parts[2]
 
-
-EMOJI_TRIGGER = re.compile(r"^合成")

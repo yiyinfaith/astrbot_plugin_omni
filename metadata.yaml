@@ -8,5 +8,25 @@ logo: logo.png
 category: 工具
 repo: https://github.com/yiyinfaith/astrbot_plugin_omni
 astrbot_version: ">=4.29.0,<5"
+support_platforms:
+  - aiocqhttp
+  - qq_official
+  - qq_official_webhook
+  - telegram
+  - wecom
+  - wecom_ai_bot
+  - lark
+  - dingtalk
+  - discord
+  - slack
+  - kook
+  - vocechat
+  - weixin_official_account
+  - weixin_oc
+  - satori
+  - misskey
+  - line
+  - matrix
+  - mattermost
 help: |
   插件介绍及使用教程见README.md文件

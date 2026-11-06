@@ -84,7 +84,7 @@
 
 ## 参考与许可
 
-项目：[yiyinfaith/astrbot_plugin_omni](https://github.com/yiyinfaith/astrbot_plugin_omni)。各功能整合自以下插件，感谢原作者：
+项目：[yiyinfaith/astrbot_plugin_omni](https://github.com/yiyinfaith/astrbot_plugin_omni)。各功能参考以下插件的思路，感谢原作者：
 [meanig](https://github.com/ttq7/meanig)、
 [primermath](https://github.com/tenno1174/astrbot_plugin_primermath)、
 [runes](https://github.com/yuweitk/astrbot_plugin_runes)、
@@ -101,9 +101,8 @@
 [safebooru](https://github.com/Last-emo-boy/astrbot_plugin_safebooru)、
 [Translation](https://github.com/zengweis/astrbot_plugin_Translation)、
 [zanwo](https://github.com/Futureppo/astrbot_plugin_zanwo)、
-[llm_amnesia](https://github.com/SinkAbyss/astrbot_plugin_llm_amnesia)。
-新增整合：
+[llm_amnesia](https://github.com/SinkAbyss/astrbot_plugin_llm_amnesia)、
 [llm_executor](https://github.com/TenmaGabriel0721/astrbot_plugin_llm_executor)、
 [command_query](https://github.com/TenmaGabriel0721/astrbot_plugin_command_query)、
-[AstrNa](https://github.com/Sisyphbaous-DT-Project/astrbot_plugin_AstrNa)（仅保留所选上下文、群聊与缓存功能）。
+[AstrNa](https://github.com/Sisyphbaous-DT-Project/astrbot_plugin_AstrNa)
 遵守本仓库许可证及各上游服务的使用要求。

@@ -84,7 +84,7 @@
 
 ## 参考与许可
 
-项目：[yiyinfaith/astrbot_plugin_omni](https://github.com/yiyinfaith/astrbot_plugin_omni)。
+项目：[yiyinfaith/astrbot_plugin_omni](https://github.com/yiyinfaith/astrbot_plugin_omni)
 
 各功能参考以下插件的思路，感谢原作者：
 [meanig](https://github.com/ttq7/meanig)、

@@ -26,6 +26,7 @@
 | B 站查询 | `/B站查询 <UID>` | 基于 AICU 生成用户评论画像图 |
 | 点赞 | `赞我`、`赞@某人`、`/订阅点赞` | 仅 QQ（aiocqhttp）；订阅后每天首次有人点赞时自动给你点赞，再发一次 `/订阅点赞` 取消 |
 | 对话回退 | `/回退 [轮数]`、`/取消回退` | 不满意回复时删掉最近几轮对话（默认 1 轮，最多 10 轮）重新提问；下一次对话前可恢复。英文写法 `/rewind x`、`/rewind cancel` |
+| 执行器与指令查询 | `/指令查询帮助`、`/刷新指令缓存`、`/执行器状态`、`/测试bot身份` | 共用「LLM 指令工具」配置组；LLM 可查询当前配置下的指令、插件状态并按权限执行指令 |
 
 ## 函数工具
 
@@ -37,8 +38,16 @@
 | `plot_2d` | 二维图像：函数（可多条对比）、隐式方程、极坐标、参数方程、矢量场 |
 | `plot_3d` | 三维图像：曲面（可多个对比）、隐式曲面、球坐标、空间参数曲线 |
 | `plot_vectors` | 向量示意：二维/三维向量、加法、数乘、基变换 |
+| `execute_command` | 按当前会话权限执行 AstrBot 指令 |
+| `list_executable_commands` | 列出当前可由 LLM 执行的指令 |
+| `search_command` | 搜索当前 Bot 配置中生效的指令 |
+| `get_command_detail` | 查询一条指令的详细用法 |
+| `get_plugin_status` | 查询当前 Bot 与配置下的插件状态 |
+| `list_plugin_commands` | 列出插件提供的生效指令 |
 
 开启「Markdown 转图片」后，LLM 会把表格、代码块等复杂格式和普通文字打不出来的数学公式写进 `<md></md>`，发送时自动渲染成图片（公式由 MathJax 排版）。
+
+开启「上下文与群聊优化」后，可按需压缩旧工具结果、提供当前群身份查询工具、关闭指定群聊的 @Bot 或引用 Bot 唤醒，并在空闲时自动清理 AstrBot 的临时缓存。
 
 ## 配置
 
@@ -93,4 +102,8 @@
 [Translation](https://github.com/zengweis/astrbot_plugin_Translation)、
 [zanwo](https://github.com/Futureppo/astrbot_plugin_zanwo)、
 [llm_amnesia](https://github.com/SinkAbyss/astrbot_plugin_llm_amnesia)。
+新增整合：
+[llm_executor](https://github.com/TenmaGabriel0721/astrbot_plugin_llm_executor)、
+[command_query](https://github.com/TenmaGabriel0721/astrbot_plugin_command_query)、
+[AstrNa](https://github.com/Sisyphbaous-DT-Project/astrbot_plugin_AstrNa)（仅保留所选上下文、群聊与缓存功能）。
 遵守本仓库许可证及各上游服务的使用要求。

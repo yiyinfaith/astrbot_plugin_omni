@@ -50,6 +50,12 @@ from .omni.common import (
 from .omni.gengtu import Gengtu
 from .omni.safebooru import Safebooru
 from .omni.sensoji import EXPLAIN_PROMPT, Sensoji, remove_escaped_emojis
+from .omni.compat.command_query import CommandQueryCore
+from .omni.compat.llm_executor import LLMExecutorCore
+from .omni.compat.modules.auto_cache_cleanup import AutoCacheCleanupModule
+from .omni.compat.modules.group_identity_tools import GroupIdentityToolsModule
+from .omni.compat.modules.group_wake_suppression import GroupWakeSuppressionModule
+from .omni.compat.modules.tool_history_context import ToolHistoryContextModule
 
 # 关闭某个功能时，从 LLM 请求里移除它的函数工具
 FEATURE_TOOLS = {
@@ -76,6 +82,24 @@ class OmniPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.config = config
+        # The command executor and command catalog share one configuration
+        # section so they appear together in the WebUI.
+        llm_tools_config = self._cfg("llm_tools")
+        self._llm_executor = LLMExecutorCore(context, llm_tools_config)
+        self._command_query = CommandQueryCore(context, llm_tools_config)
+        context_config = self._cfg("context_optimization")
+        self._tool_history_context = ToolHistoryContextModule(logger=logger)
+        self._group_identity_tools = GroupIdentityToolsModule(context=context, logger=logger)
+        self._group_wake_suppression = GroupWakeSuppressionModule(
+            logger=logger,
+            disable_at_bot_wake=context_config.get("disable_group_at_bot_wake", False),
+            disable_at_bot_wake_all_groups=context_config.get("disable_group_at_bot_wake_all_groups", False),
+            disable_at_bot_wake_group_ids=context_config.get("disable_group_at_bot_wake_group_ids", []),
+            disable_reply_to_bot_wake=context_config.get("disable_group_reply_to_bot_wake", False),
+            disable_reply_to_bot_wake_all_groups=context_config.get("disable_group_reply_to_bot_wake_all_groups", False),
+            disable_reply_to_bot_wake_group_ids=context_config.get("disable_group_reply_to_bot_wake_group_ids", []),
+        )
+        self._cache_cleanup = AutoCacheCleanupModule(logger=logger)
         self.data_dir = Path(StarTools.get_data_dir(PLUGIN_NAME))
         self.temp = TempFiles(self.data_dir / "tmp", max_age=3600)
         self.browser = SharedBrowser()
@@ -91,6 +115,19 @@ class OmniPlugin(Star):
 
     async def initialize(self):
         self._apply_feature_switches()
+        try:
+            await self._llm_executor._initialize()
+        except Exception as exc:
+            logger.warning(f"[综合插件] 初始化 LLM 指令执行器失败: {exc}")
+        context_config = self._cfg("context_optimization")
+        if context_config.get("optimize_tool_history_context", False):
+            self._tool_history_context.install()
+        if context_config.get("provide_group_identity_tools", False):
+            self._group_identity_tools.install()
+        if context_config.get("disable_group_at_bot_wake", False) or context_config.get("disable_group_reply_to_bot_wake", False):
+            self._group_wake_suppression.install()
+        self._cache_cleanup.configure(enabled=context_config.get("auto_cleanup_astrbot_cache", False))
+        self._cache_cleanup.start()
 
     def _apply_feature_switches(self) -> None:
         """只改内存里的指令启用状态，不写数据库；修改配置后插件重载时重新生效。"""
@@ -102,6 +139,14 @@ class OmniPlugin(Star):
                 handler.enabled = False
 
     async def terminate(self):
+        self._tool_history_context.terminate()
+        self._group_identity_tools.terminate()
+        self._group_wake_suppression.terminate()
+        self._cache_cleanup.terminate()
+        try:
+            await self._llm_executor.terminate()
+        except Exception:
+            pass
         await self.browser.close()
         for task in list(self._background):
             task.cancel()
@@ -109,7 +154,10 @@ class OmniPlugin(Star):
     # ------------------------------------------------------------ 公共
 
     def _on(self, feature: str) -> bool:
-        return bool(section(self.config, feature).get("enable", True))
+        cfg = section(self.config, feature)
+        if feature == "llm_tools":
+            return bool(cfg.get("enabled", cfg.get("enable", True)))
+        return bool(cfg.get("enable", True))
 
     def _cfg(self, feature: str) -> dict:
         return section(self.config, feature)
@@ -149,6 +197,16 @@ class OmniPlugin(Star):
     @filter.on_llm_request()
     async def on_llm_request(self, event: AstrMessageEvent, req: ProviderRequest):
         """关闭的功能不把函数工具交给 LLM；开启 Markdown 转图片时注入使用说明。"""
+        context_config = self._cfg("context_optimization")
+        if context_config.get("optimize_tool_history_context", False):
+            self._tool_history_context.sanitize_request(req)
+        if context_config.get("auto_cleanup_astrbot_cache", False):
+            self._cache_cleanup.begin_request_activity()
+        if self._on("llm_tools"):
+            try:
+                await self._command_query.remind_plugin_status(event, req)
+            except Exception as exc:
+                logger.debug(f"[综合插件] 注入指令查询提示失败: {exc}")
         # 会话里开始新的对话后，之前回退的内容不能再恢复，否则顺序会乱
         self.rewinder.drop(event.unified_msg_origin)
         tool_set = getattr(req, "func_tool", None)
@@ -163,6 +221,8 @@ class OmniPlugin(Star):
     @filter.on_decorating_result()
     async def on_decorating_result(self, event: AstrMessageEvent):
         """把回复里 <md>...</md> 包裹的内容渲染成图片。"""
+        if self._cfg("context_optimization").get("auto_cleanup_astrbot_cache", False):
+            self._cache_cleanup.begin_send_activity()
         if not self._on("markdown2img"):
             return
         result = event.get_result()
@@ -186,6 +246,31 @@ class OmniPlugin(Star):
                     logger.error(f"[Markdown 转图片] 渲染失败: {exc}")
                     new_chain.append(Comp.Plain(f"--- Markdown 渲染异常 ---\n{content}"))
         result.chain = new_chain
+
+    @filter.on_llm_response(priority=1000)
+    async def on_llm_response(self, event: AstrMessageEvent, response):
+        if self._cfg("context_optimization").get("auto_cleanup_astrbot_cache", False):
+            self._cache_cleanup.end_request_activity()
+
+    @filter.on_agent_begin(priority=1000)
+    async def on_agent_begin(self, event: AstrMessageEvent, run_context):
+        if self._cfg("context_optimization").get("auto_cleanup_astrbot_cache", False):
+            self._cache_cleanup.begin_activity()
+
+    @filter.on_agent_done(priority=1000)
+    async def on_agent_done(self, event: AstrMessageEvent, run_context, response):
+        if self._cfg("context_optimization").get("auto_cleanup_astrbot_cache", False):
+            self._cache_cleanup.end_activity()
+
+    @filter.after_message_sent(priority=1000)
+    async def on_after_message_sent(self, event: AstrMessageEvent):
+        if self._cfg("context_optimization").get("auto_cleanup_astrbot_cache", False):
+            self._cache_cleanup.end_send_activity()
+
+    @filter.on_astrbot_loaded(priority=1000)
+    async def on_astrbot_loaded(self):
+        if self._cfg("context_optimization").get("auto_cleanup_astrbot_cache", False):
+            self._cache_cleanup.start()
 
     # ------------------------------------------------------------ 任意消息：等待发图
 
@@ -332,6 +417,108 @@ class OmniPlugin(Star):
         yield event.plain_result(
             await self.rewinder.restore(self.context.conversation_manager, event.unified_msg_origin)
         )
+
+    # ------------------------------------------------------------ LLM 指令执行与查询
+
+    @filter.llm_tool(name="execute_command")
+    async def execute_command(self, event: AstrMessageEvent, **kwargs):
+        """让 LLM 按当前会话权限执行 AstrBot 指令。
+
+        Args:
+            command(string): 要执行的指令名，不含前缀。
+            args(string): 指令参数，可留空。
+            at_user_id_list(array[string]): 需要 @ 的用户 ID，可留空。
+            at_qq_list(array[string]): at_user_id_list 的兼容参数名。
+            reply_image_url(string): 需要引用的图片 URL，可留空。
+            as_bot(boolean): 是否以 Bot 身份执行，默认 false。
+        """
+        if not self._on("llm_tools"):
+            return json.dumps({"success": False, "error": "LLM 指令工具已关闭"}, ensure_ascii=False)
+        return await self._llm_executor.execute_command(event, **kwargs)
+
+    @filter.llm_tool(name="list_executable_commands")
+    async def list_executable_commands(self, event: AstrMessageEvent, **kwargs):
+        """列出当前可由 LLM 执行的指令。
+
+        Args:
+            include_admin(boolean): 是否包含管理员指令，默认 false。
+        """
+        if not self._on("llm_tools"):
+            return json.dumps({"success": False, "error": "LLM 指令工具已关闭"}, ensure_ascii=False)
+        return await self._llm_executor.list_executable_commands(event, **kwargs)
+
+    @filter.llm_tool(name="search_command")
+    async def search_command(self, event: AstrMessageEvent, **kwargs):
+        """搜索当前 Bot 配置中可用的指令。
+
+        Args:
+            keyword(string): 功能词、插件名、指令名或别名。
+        """
+        if not self._on("llm_tools"):
+            return json.dumps({"success": False, "message": "指令查询工具已关闭"}, ensure_ascii=False)
+        return await self._command_query.search_command(event, **kwargs)
+
+    @filter.llm_tool(name="get_command_detail")
+    async def get_command_detail(self, event: AstrMessageEvent, **kwargs):
+        """查询一条指令的详细用法。
+
+        Args:
+            command_name(string): 指令名，可带或不带前缀。
+        """
+        if not self._on("llm_tools"):
+            return json.dumps({"success": False, "message": "指令查询工具已关闭"}, ensure_ascii=False)
+        return await self._command_query.get_command_detail(event, **kwargs)
+
+    @filter.llm_tool(name="get_plugin_status")
+    async def get_plugin_status(self, event: AstrMessageEvent, plugin_name: str = "", enabled_only: bool = False):
+        """查询当前 Bot 配置里的插件状态。
+
+        Args:
+            plugin_name(string): 可选的插件名称，留空查询全部。
+            enabled_only(boolean): 只返回当前配置启用的插件。
+        """
+        if not self._on("llm_tools"):
+            return json.dumps({"success": False, "message": "指令查询工具已关闭"}, ensure_ascii=False)
+        return await self._command_query.get_plugin_status(event, plugin_name, enabled_only)
+
+    @filter.llm_tool(name="list_plugin_commands")
+    async def list_plugin_commands(self, event: AstrMessageEvent, **kwargs):
+        """列出当前 Bot 配置中插件提供的指令。
+
+        Args:
+            plugin_name(string): 可选插件名称，留空列出全部插件。
+        """
+        if not self._on("llm_tools"):
+            return json.dumps({"success": False, "message": "指令查询工具已关闭"}, ensure_ascii=False)
+        return await self._command_query.list_plugin_commands(event, **kwargs)
+
+    @filter.command("测试bot身份")
+    async def test_bot_identity(self, event: AstrMessageEvent):
+        if not self._on("llm_tools"):
+            return
+        async for result in self._llm_executor.test_bot_identity(event):
+            yield result
+
+    @filter.command("刷新指令缓存", alias={"refresh_commands"})
+    async def refresh_command_cache(self, event: AstrMessageEvent):
+        if not self._on("llm_tools"):
+            return
+        async for result in self._llm_executor.refresh_cache(event):
+            yield result
+
+    @filter.command("执行器状态", alias={"executor_status"})
+    async def executor_status(self, event: AstrMessageEvent):
+        if not self._on("llm_tools"):
+            return
+        async for result in self._llm_executor.executor_status(event):
+            yield result
+
+    @filter.command("指令查询帮助", alias={"query_help"})
+    async def command_query_help(self, event: AstrMessageEvent):
+        if not self._on("llm_tools"):
+            return
+        async for result in self._command_query.help_command(event):
+            yield result
 
     # ------------------------------------------------------------ 今日人品
 

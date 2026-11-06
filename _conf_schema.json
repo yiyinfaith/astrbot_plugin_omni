@@ -496,5 +496,187 @@
         "hint": "`/回退 [轮数]`（`/rewind x`）删掉最近几轮对话，默认 1 轮、最多 10 轮；下一次对话前可用 `/取消回退`（`/rewind cancel`）恢复"
       }
     }
+  },
+  "llm_tools": {
+    "description": "LLM 指令工具（执行与查询）",
+    "type": "object",
+    "hint": "执行器和指令查询共用这一组配置。",
+    "items": {
+      "enabled": {
+        "description": "启用 LLM 指令工具",
+        "type": "bool",
+        "default": true,
+        "hint": "允许模型按当前会话权限查询并执行 AstrBot 指令。"
+      },
+      "whitelist": {
+        "description": "执行指令白名单",
+        "type": "list",
+        "default": [],
+        "items": {
+          "type": "string"
+        },
+        "hint": "留空允许所有指令；填写不带前缀的指令名。"
+      },
+      "blacklist": {
+        "description": "执行指令黑名单",
+        "type": "list",
+        "default": [],
+        "items": {
+          "type": "string"
+        },
+        "hint": "黑名单优先于白名单。"
+      },
+      "allow_admin_commands": {
+        "description": "允许执行管理员指令",
+        "type": "bool",
+        "default": false,
+        "hint": "存在管理权限风险，建议关闭。"
+      },
+      "admin_users": {
+        "description": "可由 LLM 执行管理员指令的用户",
+        "type": "list",
+        "default": [],
+        "items": {
+          "type": "string"
+        },
+        "hint": "填写用户 ID。"
+      },
+      "bot_user_id": {
+        "description": "Bot 身份 ID",
+        "type": "string",
+        "default": "bot_self",
+        "hint": "as_bot=true 时使用的身份。"
+      },
+      "bot_user_id_by_platform": {
+        "description": "按平台设置 Bot 身份 ID",
+        "type": "object",
+        "default": {},
+        "items": {
+          "aiocqhttp": {
+            "type": "string",
+            "default": ""
+          },
+          "qq_official": {
+            "type": "string",
+            "default": ""
+          },
+          "qq_official_webhook": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "bot_nickname": {
+        "description": "Bot 身份昵称",
+        "type": "string",
+        "default": "珈百璃"
+      },
+      "enable_forward": {
+        "description": "长结果使用合并转发",
+        "type": "bool",
+        "default": true
+      },
+      "forward_threshold": {
+        "description": "合并转发字数阈值",
+        "type": "int",
+        "default": 1500
+      },
+      "at_position_mode": {
+        "description": "@用户默认位置",
+        "type": "string",
+        "options": [
+          "before_args",
+          "after_args"
+        ],
+        "default": "before_args"
+      },
+      "command_at_position_map": {
+        "description": "按指令覆盖 @位置",
+        "type": "object",
+        "default": {},
+        "items": {}
+      },
+      "command_prefix": {
+        "description": "查询结果里的指令前缀",
+        "type": "string",
+        "default": "/",
+        "hint": "例如 /、~ 或 !。"
+      }
+    }
+  },
+  "context_optimization": {
+    "description": "上下文与群聊优化",
+    "type": "object",
+    "hint": "把工具历史、群身份和群聊唤醒控制放在同一组。",
+    "items": {
+      "optimize_tool_history_context": {
+        "type": "bool",
+        "description": "优化工具调用历史上下文",
+        "default": false,
+        "hint": "压缩已完成回合的旧工具结果，保留工具调用结构和最终回答。"
+      },
+      "provide_group_identity_tools": {
+        "type": "bool",
+        "description": "提供群身份查询工具",
+        "default": false,
+        "hint": "允许模型按需查询当前群成员身份、群主、管理员和生日信息。"
+      },
+      "disable_group_at_bot_wake": {
+        "type": "bool",
+        "description": "关闭群聊 @Bot 唤醒",
+        "default": false,
+        "hint": "只对下方指定群聊或全部群聊生效。"
+      },
+      "disable_group_at_bot_wake_all_groups": {
+        "type": "bool",
+        "description": "应用于所有群聊",
+        "default": false,
+        "condition": {
+          "disable_group_at_bot_wake": true
+        }
+      },
+      "disable_group_at_bot_wake_group_ids": {
+        "type": "list",
+        "description": "关闭 @Bot 唤醒的群聊 ID",
+        "items": {
+          "type": "string"
+        },
+        "default": [],
+        "condition": {
+          "disable_group_at_bot_wake": true
+        }
+      },
+      "disable_group_reply_to_bot_wake": {
+        "type": "bool",
+        "description": "关闭群聊引用 Bot 唤醒",
+        "default": false,
+        "hint": "引用 Bot 消息时不再单独触发默认回复。"
+      },
+      "disable_group_reply_to_bot_wake_all_groups": {
+        "type": "bool",
+        "description": "应用于所有群聊",
+        "default": false,
+        "condition": {
+          "disable_group_reply_to_bot_wake": true
+        }
+      },
+      "disable_group_reply_to_bot_wake_group_ids": {
+        "type": "list",
+        "description": "关闭引用 Bot 唤醒的群聊 ID",
+        "items": {
+          "type": "string"
+        },
+        "default": [],
+        "condition": {
+          "disable_group_reply_to_bot_wake": true
+        }
+      },
+      "auto_cleanup_astrbot_cache": {
+        "type": "bool",
+        "description": "自动清理 AstrBot 缓存",
+        "default": false,
+        "hint": "每天零点在启动宽限期和最近活动均空闲后清理 cache，不清理 logs。"
+      }
+    }
   }
 }

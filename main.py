@@ -54,8 +54,6 @@ from .omni.compat.command_query import CommandQueryCore
 from .omni.compat.llm_executor import LLMExecutorCore
 from .omni.compat.modules.auto_cache_cleanup import AutoCacheCleanupModule
 from .omni.compat.modules.group_identity_tools import GroupIdentityToolsModule
-from .omni.compat.modules.group_wake_suppression import GroupWakeSuppressionModule
-from .omni.compat.modules.tool_history_context import ToolHistoryContextModule
 
 # 关闭某个功能时，从 LLM 请求里移除它的函数工具
 FEATURE_TOOLS = {
@@ -88,17 +86,7 @@ class OmniPlugin(Star):
         self._llm_executor = LLMExecutorCore(context, llm_tools_config)
         self._command_query = CommandQueryCore(context, llm_tools_config)
         context_config = self._cfg("context_optimization")
-        self._tool_history_context = ToolHistoryContextModule(logger=logger)
         self._group_identity_tools = GroupIdentityToolsModule(context=context, logger=logger)
-        self._group_wake_suppression = GroupWakeSuppressionModule(
-            logger=logger,
-            disable_at_bot_wake=context_config.get("disable_group_at_bot_wake", False),
-            disable_at_bot_wake_all_groups=context_config.get("disable_group_at_bot_wake_all_groups", False),
-            disable_at_bot_wake_group_ids=context_config.get("disable_group_at_bot_wake_group_ids", []),
-            disable_reply_to_bot_wake=context_config.get("disable_group_reply_to_bot_wake", False),
-            disable_reply_to_bot_wake_all_groups=context_config.get("disable_group_reply_to_bot_wake_all_groups", False),
-            disable_reply_to_bot_wake_group_ids=context_config.get("disable_group_reply_to_bot_wake_group_ids", []),
-        )
         self._cache_cleanup = AutoCacheCleanupModule(logger=logger)
         self.data_dir = Path(StarTools.get_data_dir(PLUGIN_NAME))
         self.temp = TempFiles(self.data_dir / "tmp", max_age=3600)
@@ -120,12 +108,8 @@ class OmniPlugin(Star):
         except Exception as exc:
             logger.warning(f"[综合插件] 初始化 LLM 指令执行器失败: {exc}")
         context_config = self._cfg("context_optimization")
-        if context_config.get("optimize_tool_history_context", False):
-            self._tool_history_context.install()
         if context_config.get("provide_group_identity_tools", False):
             self._group_identity_tools.install()
-        if context_config.get("disable_group_at_bot_wake", False) or context_config.get("disable_group_reply_to_bot_wake", False):
-            self._group_wake_suppression.install()
         self._cache_cleanup.configure(enabled=context_config.get("auto_cleanup_astrbot_cache", False))
         self._cache_cleanup.start()
 
@@ -139,9 +123,7 @@ class OmniPlugin(Star):
                 handler.enabled = False
 
     async def terminate(self):
-        self._tool_history_context.terminate()
         self._group_identity_tools.terminate()
-        self._group_wake_suppression.terminate()
         self._cache_cleanup.terminate()
         try:
             await self._llm_executor.terminate()
@@ -198,8 +180,6 @@ class OmniPlugin(Star):
     async def on_llm_request(self, event: AstrMessageEvent, req: ProviderRequest):
         """关闭的功能不把函数工具交给 LLM；开启 Markdown 转图片时注入使用说明。"""
         context_config = self._cfg("context_optimization")
-        if context_config.get("optimize_tool_history_context", False):
-            self._tool_history_context.sanitize_request(req)
         if context_config.get("auto_cleanup_astrbot_cache", False):
             self._cache_cleanup.begin_request_activity()
         if self._on("llm_tools"):

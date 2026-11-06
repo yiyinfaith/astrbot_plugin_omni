@@ -607,69 +607,13 @@
   "context_optimization": {
     "description": "上下文与群聊优化",
     "type": "object",
-    "hint": "把工具历史、群身份和群聊唤醒控制放在同一组。",
+    "hint": "群身份查询与 AstrBot 缓存清理。工具历史和群聊唤醒控制已归入 Decision Engine 的对话流增强。",
     "items": {
-      "optimize_tool_history_context": {
-        "type": "bool",
-        "description": "优化工具调用历史上下文",
-        "default": false,
-        "hint": "压缩已完成回合的旧工具结果，保留工具调用结构和最终回答。"
-      },
       "provide_group_identity_tools": {
         "type": "bool",
         "description": "提供群身份查询工具",
         "default": false,
         "hint": "允许模型按需查询当前群成员身份、群主、管理员和生日信息。"
-      },
-      "disable_group_at_bot_wake": {
-        "type": "bool",
-        "description": "关闭群聊 @Bot 唤醒",
-        "default": false,
-        "hint": "只对下方指定群聊或全部群聊生效。"
-      },
-      "disable_group_at_bot_wake_all_groups": {
-        "type": "bool",
-        "description": "应用于所有群聊",
-        "default": false,
-        "condition": {
-          "disable_group_at_bot_wake": true
-        }
-      },
-      "disable_group_at_bot_wake_group_ids": {
-        "type": "list",
-        "description": "关闭 @Bot 唤醒的群聊 ID",
-        "items": {
-          "type": "string"
-        },
-        "default": [],
-        "condition": {
-          "disable_group_at_bot_wake": true
-        }
-      },
-      "disable_group_reply_to_bot_wake": {
-        "type": "bool",
-        "description": "关闭群聊引用 Bot 唤醒",
-        "default": false,
-        "hint": "引用 Bot 消息时不再单独触发默认回复。"
-      },
-      "disable_group_reply_to_bot_wake_all_groups": {
-        "type": "bool",
-        "description": "应用于所有群聊",
-        "default": false,
-        "condition": {
-          "disable_group_reply_to_bot_wake": true
-        }
-      },
-      "disable_group_reply_to_bot_wake_group_ids": {
-        "type": "list",
-        "description": "关闭引用 Bot 唤醒的群聊 ID",
-        "items": {
-          "type": "string"
-        },
-        "default": [],
-        "condition": {
-          "disable_group_reply_to_bot_wake": true
-        }
       },
       "auto_cleanup_astrbot_cache": {
         "type": "bool",

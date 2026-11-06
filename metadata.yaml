@@ -1,8 +1,8 @@
 name: astrbot_plugin_omni
-display_name: 综合插件
+display_name: 轻量工具综合插件
 desc: 把零散的娱乐与工具小功能集中到一个插件里，每个功能都有独立开关
 short_desc: 抽签、天气、翻译、二维码、数学绘图等常用功能合集
-version: v1.1.0
+version: v1.1.1
 author: 一吟Faith
 logo: logo.png
 category: 工具

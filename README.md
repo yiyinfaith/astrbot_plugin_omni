@@ -26,7 +26,7 @@
 | B 站查询 | `/B站查询 <UID>` | 基于 AICU 生成用户评论画像图 |
 | 点赞 | `赞我`、`赞@某人`、`/订阅点赞` | 仅 QQ（aiocqhttp）；订阅后每天首次有人点赞时自动给你点赞，再发一次 `/订阅点赞` 取消 |
 | 对话回退 | `/回退 [轮数]`、`/取消回退` | 不满意回复时删掉最近几轮对话（默认 1 轮，最多 10 轮）重新提问；下一次对话前可恢复。英文写法 `/rewind x`、`/rewind cancel` |
-| 执行器与指令查询 | `/指令查询帮助`、`/刷新指令缓存`、`/执行器状态`、`/测试bot身份` | 共用「LLM 指令工具」配置组；LLM 可查询当前配置下的指令、插件状态并按权限执行指令 |
+| 执行器与指令查询 | `/指令查询帮助`、`/刷新指令缓存`、`/执行器状态`（仅管理员）、`/测试bot身份` | 共用「LLM 指令工具」配置组；LLM 可查询当前配置下的指令、插件状态并按权限执行指令 |
 
 ## 函数工具
 
@@ -44,8 +44,11 @@
 | `get_command_detail` | 查询一条指令的详细用法 |
 | `get_plugin_status` | 查询当前 Bot 与配置下的插件状态 |
 | `list_plugin_commands` | 列出插件提供的生效指令 |
+| `get_group_members` | 查询当前 QQ 群成员，配合 @ 工具使用，仅 QQ 群聊提供 |
 
 开启「Markdown 转图片」后，LLM 会把表格、代码块等复杂格式和普通文字打不出来的数学公式写进 `<md></md>`，发送时自动渲染成图片（公式由 MathJax 排版）。
+
+开启「@ 工具」后，QQ（aiocqhttp）群聊里的 LLM 可以先查成员的 QQ 号，再写 `[at:QQ号]` 真实 @ 群友，`[at:all]` 为 @全体（默认只有群主、管理员或 Bot 管理员的消息才能触发）。QQ 私聊不支持 @，所以私聊不注入提示词，模型误写的标签也会在发送前删掉。流式回复无法转换标签。
 
 开启「上下文与群聊优化」后，可按需提供当前群身份查询工具，并在空闲时自动清理 AstrBot 的临时缓存。工具历史和群聊唤醒控制位于 Decision Engine 的「对话流增强 → 输入增强」。
 
@@ -106,6 +109,7 @@
 [llm_amnesia](https://github.com/SinkAbyss/astrbot_plugin_llm_amnesia)、
 [llm_executor](https://github.com/TenmaGabriel0721/astrbot_plugin_llm_executor)、
 [command_query](https://github.com/TenmaGabriel0721/astrbot_plugin_command_query)、
-[AstrNa](https://github.com/Sisyphbaous-DT-Project/astrbot_plugin_AstrNa)
+[AstrNa](https://github.com/Sisyphbaous-DT-Project/astrbot_plugin_AstrNa)、
+[AtTool](https://github.com/nuomicici/astrbot_plugin_AtTool)
 
 遵守本仓库许可证及各上游服务的使用要求。

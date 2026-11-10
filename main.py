@@ -20,6 +20,7 @@ from astrbot.core.provider.entities import ProviderRequest
 
 from .omni import (
     aicu,
+    at_tool,
     fun,
     ipquery,
     markdown2img,
@@ -61,6 +62,15 @@ FEATURE_TOOLS = {
     "math_plotter": ("plot_2d", "plot_3d", "plot_vectors"),
     "sensoji": ("explain_fortune",),
     "weather": ("get_weather",),
+    "at_tool": (at_tool.TOOL_NAME,),
+    "llm_tools": (
+        "execute_command",
+        "list_executable_commands",
+        "search_command",
+        "get_command_detail",
+        "get_plugin_status",
+        "list_plugin_commands",
+    ),
 }
 # 处理函数 -> 所属功能。功能关闭时把这些指令设为禁用，不再被匹配，也不会出现在指令列表里
 HANDLER_FEATURES = {
@@ -71,6 +81,8 @@ HANDLER_FEATURES = {
     "weather_cmd": "weather", "translate_cmd": "translation", "ip_query": "ipquery", "whois_query": "ipquery",
     "aicu_uid": "aicu", "like_me": "zanwo", "subscribe_like": "zanwo",
     "rewind_cmd": "rewind", "cancel_rewind": "rewind",
+    "test_bot_identity": "llm_tools", "refresh_command_cache": "llm_tools",
+    "executor_status": "llm_tools", "command_query_help": "llm_tools",
 }
 TAG_COMMANDS = {"tag"}
 QR_COMMANDS = {"二维码", "扫码"}
@@ -97,6 +109,7 @@ class OmniPlugin(Star):
         self.tag_waiter = ImageWaiter()
         self.qr_waiter = ImageWaiter()
         self.rewinder = rewind.Rewinder()
+        self.at_tool = at_tool.AtTool(self._cfg("at_tool"))
         self._math = None
         self._plot_lock = asyncio.Lock()  # pyplot 不是线程安全的，一次只画一张
         self._background: set[asyncio.Task] = set()
@@ -195,8 +208,12 @@ class OmniPlugin(Star):
                 if not self._on(feature):
                     for name in names:
                         tool_set.remove_tool(name)
+            if not at_tool.supports_at(event):
+                tool_set.remove_tool(at_tool.TOOL_NAME)
         if self._on("markdown2img"):
             req.system_prompt = f"{req.system_prompt or ''}\n\n{markdown2img.INSTRUCTION}"
+        if self._on("at_tool"):
+            await self.at_tool.inject(event, req)
 
     @filter.on_decorating_result()
     async def on_decorating_result(self, event: AstrMessageEvent):
@@ -226,6 +243,12 @@ class OmniPlugin(Star):
                     logger.error(f"[Markdown 转图片] 渲染失败: {exc}")
                     new_chain.append(Comp.Plain(f"--- Markdown 渲染异常 ---\n{content}"))
         result.chain = new_chain
+
+    @filter.on_decorating_result(priority=2)
+    async def on_decorating_at_tags(self, event: AstrMessageEvent):
+        """把回复里的 [at:QQ号] 转成真实的 @；私聊等不能 @ 的场景直接删掉标签。"""
+        if self._on("at_tool"):
+            await self.at_tool.process_result(event)
 
     @filter.on_llm_response(priority=1000)
     async def on_llm_response(self, event: AstrMessageEvent, response):
@@ -421,7 +444,7 @@ class OmniPlugin(Star):
         """列出当前可由 LLM 执行的指令。
 
         Args:
-            include_admin(boolean): 是否包含管理员指令，默认 false。
+            category(string): 可选，按插件名筛选，留空列出全部。
         """
         if not self._on("llm_tools"):
             return json.dumps({"success": False, "error": "LLM 指令工具已关闭"}, ensure_ascii=False)
@@ -486,6 +509,7 @@ class OmniPlugin(Star):
         async for result in self._llm_executor.refresh_cache(event):
             yield result
 
+    @filter.permission_type(filter.PermissionType.ADMIN)
     @filter.command("执行器状态", alias={"executor_status"})
     async def executor_status(self, event: AstrMessageEvent):
         if not self._on("llm_tools"):
@@ -499,6 +523,19 @@ class OmniPlugin(Star):
             return
         async for result in self._command_query.help_command(event):
             yield result
+
+    # ------------------------------------------------------------ @ 工具（原 AtTool）
+
+    @filter.llm_tool(name=at_tool.TOOL_NAME)
+    async def get_group_members(self, event: AstrMessageEvent, keyword: str = "") -> str:
+        """查询当前 QQ 群的成员（昵称、群名片、QQ 号、身份）。需要 @ 某人时先用它确认 QQ 号。
+
+        Args:
+            keyword(string): 搜索关键词，匹配昵称、群名片或 QQ 号；留空返回全部成员。
+        """
+        if not self._on("at_tool"):
+            return "@ 工具已关闭"
+        return await at_tool.get_group_members(event, keyword)
 
     # ------------------------------------------------------------ 今日人品
 

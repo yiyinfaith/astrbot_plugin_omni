@@ -45,7 +45,7 @@ class BotIdentityEventWrapper:
     事件包装器，用于覆盖 get_sender_id() / get_sender_name() 方法返回Bot的身份
     """
 
-    def __init__(self, original_event: AstrMessageEvent, bot_user_id: str, bot_nickname: str='珈百璃'):
+    def __init__(self, original_event: AstrMessageEvent, bot_user_id: str, bot_nickname: str='Bot'):
         """Create an isolated logical Bot identity for command handlers.
 
         Args:
@@ -160,7 +160,7 @@ class LLMExecutorCore:
         self.bot_user_id = self.config.get('bot_user_id', 'bot_self')
         bot_user_id_by_platform = self.config.get('bot_user_id_by_platform', self.config.get('bot_user_id_map', {}))
         self.bot_user_id_by_platform: dict[str, str] = bot_user_id_by_platform if isinstance(bot_user_id_by_platform, dict) else {}
-        self.bot_nickname = self.config.get('bot_nickname', '珈百璃')
+        self.bot_nickname = self.config.get('bot_nickname', 'Bot')
         self.enable_forward = self.config.get('enable_forward', True)
         self.forward_threshold = self.config.get('forward_threshold', 1500)
         self.at_position_mode = self.config.get('at_position_mode', 'before_args')
@@ -501,7 +501,7 @@ class LLMExecutorCore:
                 raw_path = image_str[7:]
                 while raw_path.startswith('/') and len(raw_path) > 2 and (raw_path[2] == ':'):
                     raw_path = raw_path[1:]
-                file_uri = Path(raw_path.replace('/', '\\')).resolve().as_uri()
+                file_uri = Path(raw_path).resolve().as_uri()
                 return file_uri
             except Exception as e:
                 logger.debug(f'规范化 file URI 失败，保留原值: {e}')
@@ -918,8 +918,8 @@ class LLMExecutorCore:
         if event is None:
             logger.warning(f'execute_command 无法从工具上下文提取消息事件: {self._describe_event_like(original_event)}')
             return json.dumps({'success': False, 'error': f'无法从工具上下文识别消息事件，收到对象类型: {self._describe_event_like(original_event)}'}, ensure_ascii=False)
-        command = kwargs.get('command', '').strip()
-        args = kwargs.get('args', '').strip()
+        command = str(kwargs.get('command') or '').strip()
+        args = str(kwargs.get('args') or '').strip()
         at_qq_list = kwargs.get('at_user_id_list')
         if at_qq_list is None:
             at_qq_list = kwargs.get('at_qq_list', [])
@@ -927,8 +927,11 @@ class LLMExecutorCore:
             at_qq_list = [str(at_qq_list)]
         else:
             at_qq_list = [str(user_id) for user_id in at_qq_list or []]
-        reply_image_url = kwargs.get('reply_image_url', '').strip()
+        reply_image_url = str(kwargs.get('reply_image_url') or '').strip()
+        # 模型偶尔把布尔值写成字符串，"false" 不能当成真值，否则会以 Bot 身份执行
         as_bot = kwargs.get('as_bot', False)
+        if isinstance(as_bot, str):
+            as_bot = as_bot.strip().lower() == 'true'
         log_parts = [f'LLM请求执行指令: {command}']
         if args:
             log_parts.append(f'参数: {args}')
@@ -943,8 +946,8 @@ class LLMExecutorCore:
         logger.info(' | '.join(log_parts))
         if not command:
             return json.dumps({'success': False, 'error': '缺少必需参数: command'}, ensure_ascii=False)
-        if not self._handler_cache:
-            self._build_handler_cache()
+        # 每次按当前注册表重建，冷启动时后加载的插件、热重载、WebUI 里禁用的指令才能跟上
+        self._build_handler_cache()
         can_exec, reason = self._can_execute(command, event, as_bot=as_bot)
         if not can_exec:
             logger.warning(f'指令执行被拒绝: {command} - {reason}')
@@ -1004,6 +1007,8 @@ class LLMExecutorCore:
             if not filters_ok:
                 logger.warning(f'指令执行被过滤器拒绝: {command} - {filter_reason}')
                 return json.dumps({'success': False, 'command': actual_command, 'error': filter_reason}, ensure_ascii=False)
+            # 正常流水线里，处理函数拿到的 message_str 不带唤醒前缀
+            base_event.message_str = base_event.message_str.lstrip('/')
             async for result in call_handler(exec_event, handler.handler, **parsed_params):
                 current_result = exec_event.get_result() if hasattr(exec_event, 'get_result') else None
                 if current_result is not None:
@@ -1044,7 +1049,7 @@ class LLMExecutorCore:
                         if hasattr(result, 'chain') and result.chain:
                             all_components.extend(result.chain)
                     if all_components:
-                        node = Node(uin=exec_event.get_self_id(), name='珈百璃', content=all_components)
+                        node = Node(uin=exec_event.get_self_id(), name=self.bot_nickname, content=all_components)
                         await exec_event.send(exec_event.chain_result([node]))
                         sent_count += 1
                         logger.debug('已使用合并转发发送指令结果')
@@ -1113,10 +1118,9 @@ class LLMExecutorCore:
         if event is None:
             logger.warning(f'list_executable_commands 无法从工具上下文提取消息事件: {self._describe_event_like(original_event)}')
             return json.dumps({'success': False, 'error': f'无法从工具上下文识别消息事件，收到对象类型: {self._describe_event_like(original_event)}'}, ensure_ascii=False)
-        category = kwargs.get('category', '').strip()
+        category = str(kwargs.get('category') or '').strip()
         logger.info(f'LLM请求列出可执行指令，分类: {category or '全部'}')
-        if not self._handler_cache:
-            self._build_handler_cache()
+        self._build_handler_cache()
         executable_commands = []
         for cmd_name, handler_info in self._handler_cache.items():
             can_exec, _ = self._can_execute(cmd_name, event)
@@ -1154,6 +1158,7 @@ class LLMExecutorCore:
 
     async def executor_status(self, event: AstrMessageEvent):
         """查看LLM指令执行器状态"""
+        self._build_handler_cache()
         enabled_str = '✅ 已启用' if self.enabled else '❌ 已禁用'
         whitelist_str = ', '.join(self.whitelist) if self.whitelist else '无限制'
         blacklist_str = ', '.join(self.blacklist) if self.blacklist else '无'

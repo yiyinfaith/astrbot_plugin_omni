@@ -326,7 +326,7 @@ class CommandQueryCore:
             plugin_name = cmd_info['plugin']
             similar_commands = []
             for cmd_name, cmd_data in all_commands.items():
-                if cmd_data['plugin'] == plugin_name and cmd_name != command_name:
+                if cmd_data['plugin'] == plugin_name and cmd_name != cmd_info['command']:
                     similar_commands.append(cmd_name)
                     if len(similar_commands) >= 3:
                         break

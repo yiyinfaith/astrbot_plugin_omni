@@ -260,7 +260,8 @@ class LLMExecutorCore:
             return (False, f'指令 {command} 所属插件未在当前 Bot 配置中启用')
         platform_name = event.get_platform_name()
         support_platforms = handler_info.get('support_platforms', [])
-        if support_platforms and platform_name not in support_platforms:
+        # support_platforms 只是市场声明，WebChat 是内置调试入口，不在声明范围里，任何插件的指令都能用
+        if support_platforms and platform_name != 'webchat' and platform_name not in support_platforms:
             return (False, f'指令 {command} 不兼容当前平台 {platform_name}')
         cfg = self._get_astrbot_config(event)
         for filter_ in handler_info['handler'].event_filters:

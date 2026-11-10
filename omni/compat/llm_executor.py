@@ -1138,44 +1138,6 @@ class LLMExecutorCore:
             plugins_dict[plugin].append({'command': cmd['command'], 'description': cmd['description'], 'aliases': cmd['aliases']})
         return json.dumps({'success': True, 'total_count': len(executable_commands), 'plugins': plugins_dict}, ensure_ascii=False, indent=2)
 
-    async def test_bot_identity(self, event: AstrMessageEvent):
-        """测试Bot身份切换功能 - 使用包装器方法"""
-        original_id = event.get_sender_id()
-        test_id = 'test_bot_12345'
-        try:
-            wrapped_event = BotIdentityEventWrapper(event, test_id, self.bot_nickname)
-            wrapped_id = wrapped_event.get_sender_id()
-            can_access_message_str = hasattr(wrapped_event, 'message_str')
-            can_access_send = hasattr(wrapped_event, 'send')
-            result = f'🔍 Bot身份测试结果（包装器方法）：\n原始ID: {original_id}\n测试ID: {test_id}\n包装器返回的ID: {wrapped_id}\n修改是否成功: {('✅ 是' if str(wrapped_id) == str(test_id) else '❌ 否')}\n\n包装器功能测试:\n- 可以访问 message_str: {('✅' if can_access_message_str else '❌')}\n- 可以访问 send 方法: {('✅' if can_access_send else '❌')}\n\nBot配置的ID: {self.bot_user_id}\n\n💡 新方法说明：\n现在使用包装器来覆盖 get_sender_id() 方法，\n而不是直接修改事件对象的属性。\n这样可以确保无论事件对象内部如何实现，\n都能正确返回Bot的ID。\n'
-            yield event.plain_result(result)
-        except Exception as e:
-            yield event.plain_result(f'❌ 测试失败: {e}\n{type(e).__name__}: {str(e)}')
-
-    async def refresh_cache(self, event: AstrMessageEvent):
-        """手动刷新指令处理器缓存"""
-        self._build_handler_cache()
-        yield event.plain_result(f'✅ 指令缓存已刷新，共缓存 {len(self._handler_cache)} 个指令')
-
-    async def executor_status(self, event: AstrMessageEvent):
-        """查看LLM指令执行器状态"""
-        self._build_handler_cache()
-        enabled_str = '✅ 已启用' if self.enabled else '❌ 已禁用'
-        whitelist_str = ', '.join(self.whitelist) if self.whitelist else '无限制'
-        blacklist_str = ', '.join(self.blacklist) if self.blacklist else '无'
-        admin_str = '是' if self.allow_admin_commands else '否'
-        admin_users_str = ', '.join(self.admin_users) if self.admin_users else '无'
-        status_text = f'=== LLM 指令执行器状态 ===\n🔌 启用状态: {enabled_str}\n📝 缓存指令数: {len(self._handler_cache)}\n📋 白名单: {whitelist_str}\n🚫 黑名单: {blacklist_str}\n👑 允许管理员指令: {admin_str}\n👤 管理员用户: {admin_users_str}\n\n【可执行指令统计】'
-        plugin_counts = {}
-        for handler_info in self._handler_cache.values():
-            plugin = handler_info['plugin']
-            if plugin not in plugin_counts:
-                plugin_counts[plugin] = 0
-            plugin_counts[plugin] += 1
-        for plugin, count in sorted(plugin_counts.items()):
-            status_text += f'\n  • {plugin}: {count} 个指令'
-        yield event.plain_result(status_text)
-
     async def terminate(self) -> None:
         """插件卸载时调用"""
         logger.info('LLM指令执行器插件已卸载')

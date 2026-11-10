@@ -2,15 +2,13 @@ import collections
 
 import json
 
-from collections.abc import AsyncGenerator
-
 from datetime import datetime, timezone
 
 from typing import Any
 
 from astrbot.api import AstrBotConfig, logger
 
-from astrbot.api.event import AstrMessageEvent, MessageEventResult, filter
+from astrbot.api.event import AstrMessageEvent, filter
 
 from astrbot.api.star import Context, Star
 
@@ -473,11 +471,6 @@ class CommandQueryCore:
         except Exception as e:
             logger.error(f'查询插件指令时发生错误: {e}')
             return json.dumps({'success': False, 'message': f'查询失败: {str(e)}'}, ensure_ascii=False, indent=2)
-
-    async def help_command(self, event: AstrMessageEvent) -> AsyncGenerator[MessageEventResult, None]:
-        """显示插件帮助信息"""
-        help_text = '=== 指令查询插件 v2.2.0 ===\n👩\u200d💻 by 珈百璃\n\n【核心功能】\n为 LLM 提供实时指令查询能力，让 LLM 能够：\n✅ 纠正用户输入的错误指令\n✅ 引导用户正确使用功能\n✅ 推荐相关指令\n✅ 按当前 Bot 配置查询插件启用状态，包括无指令插件\n\n【LLM 工具函数】\n1️⃣ search_command(keyword)\n   搜索指令，支持模糊匹配\n   场景：用户输错指令、找功能\n\n2️⃣ get_command_detail(command_name)\n   查询指令详情和用法\n   场景：用户问怎么用某个指令\n\n3️⃣ list_plugin_commands(plugin_name)\n   列举当前配置中插件的生效指令，不是完整插件清单\n   场景：用户问某个插件有哪些指令\n\n4️⃣ get_plugin_status(plugin_name, enabled_only)\n   实时查询插件全局状态与当前 Bot 配置的选择状态\n   场景：用户问启用了哪些插件、某插件是否启用、自身有什么插件功能\n\n【应用场景示例】\n🔹 用户：/钩鱼\n   LLM：[调用 search_command("钩鱼")]\n   LLM：姐姐是 /钓鱼 哦，不是钩鱼～\n\n🔹 用户：怎么玩钓鱼\n   LLM：[调用 get_command_detail("/钓鱼")]\n   LLM：钓鱼游戏使用 /钓鱼 开始...\n\n🔹 用户：有没有抽奖功能\n   LLM：[调用 search_command("抽奖")]\n   LLM：有的！可以用 /抽奖 参与...\n\n【可用命令】\n/指令查询帮助         - 显示本帮助\n\n【设计理念】\n精简实用，只返回必要信息\n跟随后台命令配置\n别名聚合到主命令，减少重复候选\n让 LLM 成为用户的指令助手\n\n【数据来源】\n✅ 使用 AstrBot command_management.list_commands()\n✅ 自动过滤禁用命令\n✅ 返回 command_id 供 LLM 区分相似指令'
-        yield event.plain_result(help_text)
 
     async def terminate(self) -> None:
         """插件卸载时调用"""

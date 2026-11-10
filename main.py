@@ -81,8 +81,6 @@ HANDLER_FEATURES = {
     "weather_cmd": "weather", "translate_cmd": "translation", "ip_query": "ipquery", "whois_query": "ipquery",
     "aicu_uid": "aicu", "like_me": "zanwo", "subscribe_like": "zanwo",
     "rewind_cmd": "rewind", "cancel_rewind": "rewind",
-    "test_bot_identity": "llm_tools", "refresh_command_cache": "llm_tools",
-    "executor_status": "llm_tools", "command_query_help": "llm_tools",
 }
 TAG_COMMANDS = {"tag"}
 QR_COMMANDS = {"二维码", "扫码"}
@@ -494,35 +492,6 @@ class OmniPlugin(Star):
         if not self._on("llm_tools"):
             return json.dumps({"success": False, "message": "指令查询工具已关闭"}, ensure_ascii=False)
         return await self._command_query.list_plugin_commands(event, **kwargs)
-
-    @filter.command("测试bot身份")
-    async def test_bot_identity(self, event: AstrMessageEvent):
-        if not self._on("llm_tools"):
-            return
-        async for result in self._llm_executor.test_bot_identity(event):
-            yield result
-
-    @filter.command("刷新指令缓存", alias={"refresh_commands"})
-    async def refresh_command_cache(self, event: AstrMessageEvent):
-        if not self._on("llm_tools"):
-            return
-        async for result in self._llm_executor.refresh_cache(event):
-            yield result
-
-    @filter.permission_type(filter.PermissionType.ADMIN)
-    @filter.command("执行器状态", alias={"executor_status"})
-    async def executor_status(self, event: AstrMessageEvent):
-        if not self._on("llm_tools"):
-            return
-        async for result in self._llm_executor.executor_status(event):
-            yield result
-
-    @filter.command("指令查询帮助", alias={"query_help"})
-    async def command_query_help(self, event: AstrMessageEvent):
-        if not self._on("llm_tools"):
-            return
-        async for result in self._command_query.help_command(event):
-            yield result
 
     # ------------------------------------------------------------ @ 工具（原 AtTool）
 

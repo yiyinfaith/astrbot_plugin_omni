@@ -77,6 +77,8 @@ async def fetch_image_from_api(url: str, *, params: dict | None = None, seconds:
     """调用随机图片类接口：直接返回图片或返回带图片链接的 JSON 都支持。"""
     import json
 
+    # 有的接口挂在 CDN 后面，同一个地址的结果会被缓存一整天，每次拿到同一张图；带一个每次不同的参数绕开缓存
+    params = {**(params or {}), "_": uuid.uuid4().hex}
     status, ctype, body = await fetch(url, params=params, seconds=seconds)
     if status != 200:
         raise RuntimeError(f"接口返回 HTTP {status}")
